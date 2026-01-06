@@ -14,6 +14,8 @@ Track changes in sentiment over the course of a narrative text. Inspired by Matt
 
 Based on research in computational literary analysis, this package makes it easy to uncover the emotional patterns that shape stories.
 
+Consult the `documentation here <https://browndw.github.io/moodswing/>`_
+
 
 Quick Start
 -----------
