@@ -1,0 +1,898 @@
+[
+  {
+    "objectID": "get-started.html",
+    "href": "get-started.html",
+    "title": "Get started",
+    "section": "",
+    "text": "This walkthrough demonstrates the complete workflow: loading a sample novel, splitting it into sentences, scoring each sentence, and plotting a smoothed sentiment trajectory that reveals the story’s emotional arc."
+  },
+  {
+    "objectID": "get-started.html#background-why-track-sentiment-over-narrative-time",
+    "href": "get-started.html#background-why-track-sentiment-over-narrative-time",
+    "title": "Get started",
+    "section": "Background: Why track sentiment over narrative time?",
+    "text": "Background: Why track sentiment over narrative time?\nStories follow emotional patterns. As readers, we intuitively recognize rising tension, climactic moments, and resolutions. Computational sentiment analysis makes these patterns visible and measurable (Jockers 2015; Reagan et al. 2016).\nBy scoring the sentiment of each sentence in a novel and smoothing those scores, we can visualize the narrative arc—the trajectory of emotional valence from beginning to end. Research has shown that stories cluster around a small number of archetypal shapes (Reagan et al. 2016), and that analyzing these arcs can reveal otherwise hidden structures in narrative (Elkins 2025; Hu et al. 2020).\nThe moodswing package brings this approach to Python, implementing the same workflow as the R syuzhet package (Jockers 2015) while adding modern NLP options. This method has become widely used in digital humanities research (Rebora et al. 2023), particularly for analyzing large corpora where close reading alone would be impractical.\n\n\n\n\n\n\nFor deeper background\n\n\n\nFor a comprehensive discussion of sentiment analysis in literary studies, see Rebora et al. (2023) and Elkins (2022). The original R implementation and its theoretical foundation are described in Jockers (2015)."
+  },
+  {
+    "objectID": "get-started.html#prerequisites",
+    "href": "get-started.html#prerequisites",
+    "title": "Get started",
+    "section": "Prerequisites",
+    "text": "Prerequisites\nImport the high-level helpers we’ll use throughout this guide:\n\nfrom moodswing import (\n    DictionarySentimentAnalyzer,\n    Sentencizer,\n    DCTTransform,\n    prepare_trajectory,\n    plot_trajectory,\n)\nfrom moodswing.data import load_sample_text"
+  },
+  {
+    "objectID": "get-started.html#loading-a-text",
+    "href": "get-started.html#loading-a-text",
+    "title": "Get started",
+    "section": "Loading a text",
+    "text": "Loading a text\nThe package bundles several public-domain novels for experimentation. Each helper returns a tuple of (doc_id, text):\n\ndoc_id, text = load_sample_text(\"madame_bovary\")\nprint(f\"Loaded: {doc_id}\")\nprint(f\"Length: {len(text):,} characters\")\n\nLoaded: madame_bovary\nLength: 648,257 characters\n\n\nYou can also load your own texts using load_text_file() or load_text_directory() (see the API reference for details)."
+  },
+  {
+    "objectID": "get-started.html#splitting-text-into-sentences",
+    "href": "get-started.html#splitting-text-into-sentences",
+    "title": "Get started",
+    "section": "Splitting text into sentences",
+    "text": "Splitting text into sentences\nSentence-level analysis is the foundation of sentiment trajectories. The Sentencizer uses NLTK’s Punkt tokenizer, which handles abbreviations, quotations, and other boundary ambiguities:\n\nsentencizer = Sentencizer()\nsentences = sentencizer.split(text)\nprint(f\"Total sentences: {len(sentences)}\")\nprint(\"\\nFirst five sentences:\")\nfor i, sent in enumerate(sentences[:5], 1):\n    print(f\"{i}. {sent[:70]}...\")\n\nTotal sentences: 6943\n\nFirst five sentences:\n1. Part I Chapter One We were in class when the head-master came in, foll...\n2. Those who had been asleep woke up, and every one rose as if just surpr...\n3. The head-master made a sign to us to sit down....\n4. Then, turning to the class-master, he said to him in a low voice-- \"Mo...\n5. If his work and conduct are satisfactory, he will go into one of the u..."
+  },
+  {
+    "objectID": "get-started.html#scoring-sentences",
+    "href": "get-started.html#scoring-sentences",
+    "title": "Get started",
+    "section": "Scoring sentences",
+    "text": "Scoring sentences\nDictionarySentimentAnalyzer evaluates each sentence by summing the sentiment values of its constituent words. We’ll use the Syuzhet lexicon, which was designed specifically for narrative analysis (Jockers 2015):\n\nanalyzer = DictionarySentimentAnalyzer()\nscores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\nprint(f\"Score range: [{min(scores):.2f}, {max(scores):.2f}]\")\nprint(f\"Mean score: {sum(scores)/len(scores):.3f}\")\nprint(f\"\\nFirst five scores: {scores[:5]}\")\n\nScore range: [-4.90, 8.20]\nMean score: 0.060\n\nFirst five scores: [1.2000000000000002, 0.25, 0.0, 1.5, 1.05]\n\n\nEach score represents the emotional valence of that sentence: positive numbers indicate pleasant or optimistic language, negative numbers indicate unpleasant or pessimistic language, and zero indicates neutral or absent sentiment words.\n\n\n\n\n\n\nTry different lexicons\n\n\n\nThe method parameter accepts \"syuzhet\" (default), \"afinn\", \"bing\", or \"nrc\". Each lexicon has different characteristics. See Using sentiment lexicons for detailed comparisons."
+  },
+  {
+    "objectID": "get-started.html#transforming-the-scores",
+    "href": "get-started.html#transforming-the-scores",
+    "title": "Get started",
+    "section": "Transforming the scores",
+    "text": "Transforming the scores\nRaw sentence-by-sentence scores are noisy—individual words can spike the signal. We apply two smoothing operations to reveal the underlying emotional trajectory:\n\nRolling mean: A moving average that reduces local noise\nDiscrete Cosine Transform (DCT): A spectral smoothing technique that emphasizes the overall shape\n\nBoth are computed by prepare_trajectory():\n\ntrajectory = prepare_trajectory(\n    scores,\n    rolling_window=max(3, int(len(scores) * 0.1)),  # ~10% of sentences\n    dct_transform=DCTTransform(\n        low_pass_size=10,      # Keep only low-frequency components (note that a lower value like 5 will show less fluctuations)\n        output_length=200,     # Interpolate to 200 points for plotting\n        scale_range=True       # Normalize to [-1, 1]\n    ),\n)\nprint(trajectory)\n\nTrajectoryComponents(raw=array([-0.06870229, -0.21374046, -0.2519084 , ..., -0.36641221,\n       -0.06870229, -0.16030534], shape=(6943,)), rolling=array([ 0.5443787 ,  0.54224028,  0.52419473, ..., -0.82508478,\n       -0.81303351, -0.81826638], shape=(6943,)), dct=array([ 0.8207369 ,  0.82298883,  0.8274407 ,  0.83398953,  0.84248315,\n        0.85272299,  0.86446766,  0.87743733,  0.89131877,  0.90577107,\n        0.92043177,  0.93492343,  0.94886051,  0.9618563 ,  0.97353001,\n        0.98351363,  0.99145867,  0.99704247,  0.99997417,  1.        ,\n        0.99690802,  0.99053207,  0.98075494,  0.96751068,  0.95078606,\n        0.93062106,  0.9071085 ,  0.8803927 ,  0.85066734,  0.81817246,\n        0.78319065,  0.74604256,  0.70708184,  0.66668949,  0.62526776,\n        0.58323389,  0.54101343,  0.49903367,  0.45771702,  0.4174745 ,\n        0.37869959,  0.34176234,  0.30700404,  0.27473237,  0.24521719,\n        0.21868704,  0.19532636,  0.17527353,  0.15861964,  0.14540813,\n        0.13563521,  0.12925101,  0.12616159,  0.12623149,  0.12928701,\n        0.13512006,  0.14349238,  0.1541403 ,  0.16677965,  0.18111096,\n        0.19682477,  0.21360684,  0.23114337,  0.24912599,  0.26725645,\n        0.285251  ,  0.30284431,  0.3197929 ,  0.33587806,  0.35090817,\n        0.3647204 ,  0.37718186,  0.38819003,  0.39767269,  0.40558721,\n        0.41191928,  0.4166812 ,  0.41990967,  0.4216632 ,  0.42201926,\n        0.42107108,  0.41892445,  0.41569425,  0.41150111,  0.40646808,\n        0.40071746,  0.39436784,  0.38753139,  0.38031154,  0.37280094,\n        0.3650799 ,  0.35721524,  0.34925962,  0.34125124,  0.33321408,\n        0.32515849,  0.31708228,  0.30897206,  0.30080497,  0.29255066,\n        0.28417347,  0.2756348 ,  0.26689547,  0.25791817,  0.24866983,\n        0.23912386,  0.2292622 ,  0.21907712,  0.20857278,  0.19776631,\n        0.1866887 ,  0.17538507,  0.16391471,  0.15235051,  0.14077808,\n        0.12929436,  0.1180059 ,  0.10702675,  0.09647595,  0.08647489,\n        0.07714434,  0.06860135,  0.06095614,  0.05430885,  0.04874648,\n        0.0443399 ,  0.04114108,  0.03918061,  0.03846557,  0.03897779,\n        0.0406726 ,  0.043478  ,  0.04729446,  0.05199523,  0.05742719,\n        0.06341228,  0.06974955,  0.07621761,  0.08257769,  0.08857708,\n        0.093953  ,  0.09843674,  0.10175813,  0.10365012,  0.10385346,\n        0.1021214 ,  0.09822429,  0.091954  ,  0.08312807,  0.07159349,\n        0.05723013,  0.03995358,  0.01971745, -0.0034849 , -0.02961932,\n       -0.05861052, -0.09034243, -0.12465922, -0.16136707, -0.20023661,\n       -0.24100593, -0.28338431, -0.32705633, -0.37168657, -0.41692463,\n       -0.46241041, -0.50777968, -0.55266968, -0.59672474, -0.6396018 ,\n       -0.68097573, -0.72054435, -0.75803306, -0.793199  , -0.8258346 ,\n       -0.85577062, -0.88287838, -0.90707139, -0.92830613, -0.94658213,\n       -0.96194126, -0.97446622, -0.98427839, -0.99153489, -0.99642508,\n       -0.99916644, -1.        , -0.99918528, -0.99699502, -0.99370961,\n       -0.98961144, -0.98497927, -0.98008263, -0.97517647, -0.97049613,\n       -0.9662527 , -0.96262882, -0.95977511, -0.95780719, -0.95680345]))\n\n\nThe TrajectoryComponents object holds three arrays: - raw: Original normalized scores - rolling: Rolling-mean smoothed scores\n- dct: DCT smoothed scores (the “narrative arc”)"
+  },
+  {
+    "objectID": "get-started.html#plotting-a-sentiment-trajectory",
+    "href": "get-started.html#plotting-a-sentiment-trajectory",
+    "title": "Get started",
+    "section": "Plotting a sentiment trajectory",
+    "text": "Plotting a sentiment trajectory\nVisualize all three curves together to see how smoothing reveals narrative structure:\n\nplot_trajectory(trajectory, title=f\"{doc_id} Sentiment Trajectory\")\n\n\n\n\nSentiment trajectory showing raw scores (gray), rolling mean (blue), and DCT smooth (red)\n\n\n\n\nInterpreting the plot:\n\nGray dots/line (raw): Noisy sentence-level scores\nBlue line (rolling mean): Medium-term emotional trends\nRed line (DCT smooth): The overall narrative arc—the “shape” of the story\n\nThe DCT curve reveals the story’s broad emotional structure. In many narratives, you’ll see classic patterns: a gradual rise to a climactic peak, followed by a fall or resolution (Reagan et al. 2016)."
+  },
+  {
+    "objectID": "get-started.html#working-with-dataframes",
+    "href": "get-started.html#working-with-dataframes",
+    "title": "Get started",
+    "section": "Working with DataFrames",
+    "text": "Working with DataFrames\nFor custom analysis and visualization, you can convert trajectory data to a pandas DataFrame. This enables advanced plotting, statistical analysis, and data export:\n\n\n\n\n\n\npandas required\n\n\n\nThe trajectory_to_dataframe() function requires pandas, which is installed automatically as a dependency when you install moodswing. If you’re working in a minimal environment, ensure pandas is available:\npip install pandas\n\n\n\nfrom moodswing import trajectory_to_dataframe\nimport pandas as pd\n\n# Convert to tidy long-format DataFrame\ndf = trajectory_to_dataframe(trajectory)\nprint(df.head(10))\nprint(f\"\\nDataFrame shape: {df.shape}\")\nprint(f\"Components: {df['component'].unique()}\")\n\n   position component     value\n0  0.000000       raw -0.068702\n1  0.000144       raw -0.213740\n2  0.000288       raw -0.251908\n3  0.000432       raw -0.022901\n4  0.000576       raw -0.091603\n5  0.000720       raw -0.068702\n6  0.000864       raw -0.099237\n7  0.001008       raw -0.290076\n8  0.001152       raw -0.251908\n9  0.001296       raw -0.190840\n\nDataFrame shape: (14086, 3)\nComponents: ['raw' 'rolling' 'dct']\n\n\n\nCustom plotting\nWith the DataFrame, you have full control over visualization. For example, plot only the smoothed components with custom styling:\n\nimport matplotlib.pyplot as plt\n\n# Filter to smoothed components only\ndf_smooth = df[df['component'].isin(['rolling', 'dct'])]\n\n# Create custom plot\nfig, ax = plt.subplots(figsize=(10, 4), dpi=150)\nfor component in ['rolling', 'dct']:\n    data = df_smooth[df_smooth['component'] == component]\n    ax.plot(\n        data['position'], \n        data['value'],\n        label=component.title(),\n        linewidth=2 if component == 'dct' else 1.5\n    )\n\nax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\nax.set_xlabel('Narrative Position', fontsize=11)\nax.set_ylabel('Sentiment', fontsize=11)\nax.set_title(f'{doc_id}: Smoothed Emotional Arc', fontsize=13)\nax.legend(frameon=False)\nax.grid(True, alpha=0.2)\nplt.tight_layout()\nplt.show()\n\n\n\n\nCustom plot showing only DCT and rolling mean trajectories\n\n\n\n\n\n\nStatistical analysis\nThe DataFrame format makes it easy to compute statistics or filter specific regions:\n\n# Summary statistics by component\nprint(df.groupby('component')['value'].describe())\n\n# Find the emotional peak (highest DCT value)\ndct_data = df[df['component'] == 'dct']\npeak_idx = dct_data['value'].idxmax()\npeak = dct_data.loc[peak_idx]\nprint(f\"\\nEmotional peak: {peak['value']:.3f} at position {peak['position']:.2f}\")\n\n            count      mean       std  min       25%       50%       75%  max\ncomponent                                                                    \ndct         200.0  0.122557  0.555607 -1.0  0.039130  0.175329  0.405807  1.0\nraw        6943.0 -0.242797  0.135901 -1.0 -0.290076 -0.251908 -0.175573  1.0\nrolling    6943.0  0.087239  0.482015 -1.0 -0.104943  0.154194  0.413157  1.0\n\nEmotional peak: 1.000 at position 0.10\n\n\n\n\nExporting data\nExport the trajectory data for use in other tools or for archival purposes:\n\n# Save to CSV\ndf.to_csv('madame_bovary_trajectory.csv', index=False)\nprint(\"Exported to madame_bovary_trajectory.csv\")\n\n# Or save as Excel with multiple sheets\nwith pd.ExcelWriter('sentiment_analysis.xlsx') as writer:\n    df.to_excel(writer, sheet_name='trajectory', index=False)\n    pd.DataFrame({'sentence': sentences, 'score': scores}).to_excel(\n        writer, sheet_name='raw_scores', index=False\n    )\n\n\n\n\n\n\n\nUsing seaborn or plotly\n\n\n\nThe tidy DataFrame format works seamlessly with modern plotting libraries:\nimport seaborn as sns\nsns.lineplot(data=df, x='position', y='value', hue='component')\nOr for interactive plots:\nimport plotly.express as px\nfig = px.line(df, x='position', y='value', color='component')\nfig.show()"
+  },
+  {
+    "objectID": "get-started.html#whats-next",
+    "href": "get-started.html#whats-next",
+    "title": "Get started",
+    "section": "What’s next?",
+    "text": "What’s next?\nThis basic workflow can be extended in many ways:\n\nCompare lexicons: Try method=\"bing\" or method=\"afinn\" to see how different dictionaries reveal different patterns\nUse spaCy: For context-aware sentiment that handles negation, see Using spaCy for sentiment\nAnalyze emotions: Use the NRC lexicon to track specific emotions (fear, joy, anger) rather than just overall valence\nProcess multiple texts: Use load_text_directory() to batch-process an entire corpus\n\nFor detailed exploration of these techniques, continue to the specialized guides in the navigation bar."
+  },
+  {
+    "objectID": "get-started.html#references",
+    "href": "get-started.html#references",
+    "title": "Get started",
+    "section": "References",
+    "text": "References\n\n\nElkins, Katherine. 2022. The Shapes of Stories: Sentiment Analysis for Narrative. Cambridge University Press.\n\n\n———. 2025. “Beyond Plot: How Sentiment Analysis Reshapes Our Understanding of Narrative Structure.” Journal of Cultural Analytics 10 (3). https://doi.org/10.22148/001c.143671.\n\n\nHu, Qiyue, Bin Liu, Mads Rosendahl Thomsen, Jianbo Gao, and Kristoffer L Nielbo. 2020. “Dynamic Evolution of Sentiments in Never Let Me Go: Insights from Multifractal Theory and Its Implications for Literary Analysis.” Digital Scholarship in the Humanities 36 (2): 322–32. https://doi.org/10.1093/llc/fqz092.\n\n\nJockers, Matthew L. 2015. “Syuzhet: Extract Sentiment and Plot Arcs from Text.” The R Journal 7 (1): 37–51. https://doi.org/10.32614/RJ-2015-004.\n\n\nReagan, Andrew J, Lewis Mitchell, Dilan Kiley, Christopher M Danforth, and Peter Sheridan Dodds. 2016. “The Emotional Arcs of Stories Are Dominated by Six Basic Shapes.” EPJ Data Science 5 (1): 1–12. https://doi.org/10.1140/epjds/s13688-016-0093-1.\n\n\nRebora, Simone et al. 2023. “Sentiment Analysis in Literary Studies. A Critical Survey.” Digital Humanities Quarterly 17 (2): 1–17. https://dhq.digitalhumanities.org/vol/17/2/000691/000691.html."
+  },
+  {
+    "objectID": "visualization-guide.html",
+    "href": "visualization-guide.html",
+    "title": "Visualization Guide",
+    "section": "",
+    "text": "This guide demonstrates advanced visualization techniques for sentiment trajectories, from customizing the built-in plot_trajectory() function to creating fully custom plots with seaborn, plotly, and matplotlib."
+  },
+  {
+    "objectID": "visualization-guide.html#setup",
+    "href": "visualization-guide.html#setup",
+    "title": "Visualization Guide",
+    "section": "Setup",
+    "text": "Setup\n\nfrom moodswing import (\n    DictionarySentimentAnalyzer,\n    Sentencizer,\n    DCTTransform,\n    prepare_trajectory,\n    plot_trajectory,\n    trajectory_to_dataframe,\n)\nfrom moodswing.data import load_sample_text\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\n\n# Load a sample text\ndoc_id, text = load_sample_text(\"portrait_artist\")\nsentencizer = Sentencizer()\nanalyzer = DictionarySentimentAnalyzer()\n\n# Prepare trajectory\nsentences = sentencizer.split(text)\nscores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\ntrajectory = prepare_trajectory(\n    scores,\n    rolling_window=int(len(scores) * 0.05),\n    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=True)\n)"
+  },
+  {
+    "objectID": "visualization-guide.html#controlling-component-visibility",
+    "href": "visualization-guide.html#controlling-component-visibility",
+    "title": "Visualization Guide",
+    "section": "Controlling component visibility",
+    "text": "Controlling component visibility\nThe components parameter lets you show only specific trajectory lines, reducing visual clutter:\n\nfig, ax = plt.subplots(figsize=(10, 4), dpi=150)\nplot_trajectory(trajectory, components=[\"dct\"], title=\"Clean Narrative Arc\", ax=ax)\nplt.show()\n\n\n\n\nShow only the DCT smoothed arc\n\n\n\n\n\nfig, ax = plt.subplots(figsize=(10, 4), dpi=150)\nplot_trajectory(\n    trajectory, \n    components=[\"rolling\", \"dct\"],\n    title=\"Smoothing Comparison\",\n    ax=ax\n)\nplt.show()\n\n\n\n\nCompare rolling mean vs. DCT smoothing"
+  },
+  {
+    "objectID": "visualization-guide.html#custom-colors-and-styling",
+    "href": "visualization-guide.html#custom-colors-and-styling",
+    "title": "Visualization Guide",
+    "section": "Custom colors and styling",
+    "text": "Custom colors and styling\nUse the colors parameter to match your publication or presentation style:\n\nfig, ax = plt.subplots(figsize=(10, 4), dpi=150)\nplot_trajectory(\n    trajectory,\n    colors={\n        \"raw\": \"#CCCCCC\",      # Light gray\n        \"rolling\": \"#2E86AB\",  # Ocean blue\n        \"dct\": \"#A23B72\"       # Magenta\n    },\n    title=\"Custom Color Palette\",\n    ax=ax\n)\nplt.show()\n\n\n\n\nCustom color scheme for publication"
+  },
+  {
+    "objectID": "visualization-guide.html#custom-figure-size-and-dpi",
+    "href": "visualization-guide.html#custom-figure-size-and-dpi",
+    "title": "Visualization Guide",
+    "section": "Custom figure size and DPI",
+    "text": "Custom figure size and DPI\nControl output dimensions by creating your own figure before calling plot_trajectory():\n\n# Create figure with specific dimensions\nfig, ax = plt.subplots(figsize=(12, 3), dpi=200)\n\nplot_trajectory(\n    trajectory,\n    components=[\"dct\"],\n    title=f\"{doc_id}: High-Resolution Arc\",\n    ax=ax\n)\n\n# Additional customization\nax.set_facecolor('#F8F8F8')\nplt.tight_layout()\nplt.show()\n\n\n\n\nHigh-resolution wide plot"
+  },
+  {
+    "objectID": "visualization-guide.html#using-seaborn",
+    "href": "visualization-guide.html#using-seaborn",
+    "title": "Visualization Guide",
+    "section": "Using seaborn",
+    "text": "Using seaborn\nFor statistical graphics and modern aesthetics, convert to a DataFrame and use seaborn:\n\nimport seaborn as sns\n\n# Convert to DataFrame\ndf = trajectory_to_dataframe(trajectory)\n\n# Create seaborn plot\nfig, ax = plt.subplots(figsize=(10, 4), dpi=150)\nsns.lineplot(\n    data=df, \n    x='position', \n    y='value', \n    hue='component',\n    style='component',\n    markers=False,\n    palette=['lightgray', 'steelblue', 'crimson'],\n    linewidth=2,\n    ax=ax\n)\n\nax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\nax.set_xlabel('Narrative Position')\nax.set_ylabel('Sentiment')\nax.set_title(f'{doc_id}: Seaborn Styling')\nax.legend(title='Component', frameon=False)\nplt.tight_layout()\nplt.show()\n\n\n\n\nTrajectory plot using seaborn"
+  },
+  {
+    "objectID": "visualization-guide.html#interactive-plots-with-plotly",
+    "href": "visualization-guide.html#interactive-plots-with-plotly",
+    "title": "Visualization Guide",
+    "section": "Interactive plots with plotly",
+    "text": "Interactive plots with plotly\nFor web-ready interactive visualizations, use plotly with the DataFrame:\n\nimport plotly.express as px\n\n# Filter to smoothed components only\ndf_smooth = df[df['component'].isin(['rolling', 'dct'])]\n\n# Create interactive plot\nfig = px.line(\n    df_smooth, \n    x='position', \n    y='value', \n    color='component',\n    labels={'position': 'Narrative Position', 'value': 'Sentiment', 'component': 'Method'},\n    title=f'{doc_id}: Interactive Sentiment Trajectory'\n)\n\nfig.add_hline(y=0, line_dash='dash', line_color='gray', opacity=0.5)\nfig.update_layout(\n    hovermode='x unified',\n    template='plotly_white',\n    height=400\n)\n\nfig.show()\n\n        \n        \n        \n\n\n                            \n                                            \n\n\nThe interactive plot allows you to:\n\nHover to see exact values\nZoom and pan\nToggle components on/off by clicking the legend\nExport as PNG or SVG"
+  },
+  {
+    "objectID": "visualization-guide.html#plotting-nrc-emotion-trajectories",
+    "href": "visualization-guide.html#plotting-nrc-emotion-trajectories",
+    "title": "Visualization Guide",
+    "section": "Plotting NRC emotion trajectories",
+    "text": "Plotting NRC emotion trajectories\nTrack multiple emotions across the narrative using NRC data:\n\n# Get NRC emotions\nemotions_list = analyzer.nrc_emotions(sentences)\nemotions_df = pd.DataFrame(emotions_list)\n\n# Select emotions to plot\nemotions_to_plot = ['joy', 'fear', 'anger', 'trust', 'sadness']\npositions = np.linspace(0, 1, len(emotions_df))\n\n# Create plot\nfig, ax = plt.subplots(figsize=(12, 5), dpi=150)\n\ncolors_map = {\n    'joy': 'gold',\n    'fear': 'purple', \n    'anger': 'red',\n    'trust': 'green',\n    'sadness': 'blue'\n}\n\nfor emotion in emotions_to_plot:\n    # Apply smoothing to each emotion\n    from moodswing.transforms import rolling_mean\n    smoothed = rolling_mean(emotions_df[emotion].values, window=int(len(sentences) * 0.05))\n    ax.plot(positions[:len(smoothed)], smoothed, label=emotion.title(), \n            color=colors_map[emotion], linewidth=2, alpha=0.8)\n\nax.set_xlabel('Narrative Position', fontsize=12)\nax.set_ylabel('Emotion Intensity', fontsize=12)\nax.set_title(f'{doc_id}: Emotional Landscape', fontsize=14, fontweight='bold')\nax.legend(loc='upper right', frameon=True, fancybox=True, shadow=True)\nax.grid(True, alpha=0.2)\nplt.tight_layout()\nplt.show()\n\n\n\n\nMultiple emotion trajectories"
+  },
+  {
+    "objectID": "visualization-guide.html#comparing-multiple-texts",
+    "href": "visualization-guide.html#comparing-multiple-texts",
+    "title": "Visualization Guide",
+    "section": "Comparing multiple texts",
+    "text": "Comparing multiple texts\nOverlay trajectories from different novels to compare narrative structures:\n\n# Load and process multiple texts\ntexts_to_compare = [\n    (\"portrait_artist\", \"Portrait of the Artist\"),\n    (\"madame_bovary\", \"Madame Bovary\"),\n    (\"ragged_dick\", \"Ragged Dick\")\n]\n\nfig, ax = plt.subplots(figsize=(12, 5), dpi=150)\ncolors_novels = ['#E63946', '#457B9D', '#2A9D8F']\n\nfor idx, (text_id, label) in enumerate(texts_to_compare):\n    try:\n        _, novel_text = load_sample_text(text_id)\n        novel_sents = sentencizer.split(novel_text)\n        novel_scores = analyzer.sentence_scores(novel_sents, method=\"syuzhet\")\n        \n        # Create DCT transform with consistent output length\n        novel_traj = prepare_trajectory(\n            novel_scores,\n            dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=True),\n            normalize='range'\n        )\n        \n        # Plot only DCT\n        x = np.linspace(0, 1, len(novel_traj.dct))\n        ax.plot(x, novel_traj.dct, label=label, color=colors_novels[idx], linewidth=2.5, alpha=0.8)\n    except:\n        print(f\"Could not load {text_id}\")\n\nax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\nax.set_xlabel('Normalized Narrative Position', fontsize=12)\nax.set_ylabel('Sentiment', fontsize=12)\nax.set_title('Comparing Narrative Arcs: Three Novels', fontsize=14, fontweight='bold')\nax.legend(loc='best', frameon=True, fancybox=True)\nax.grid(True, alpha=0.2)\nplt.tight_layout()\nplt.show()\n\n\n\n\nComparing narrative arcs across novels"
+  },
+  {
+    "objectID": "visualization-guide.html#faceted-plots",
+    "href": "visualization-guide.html#faceted-plots",
+    "title": "Visualization Guide",
+    "section": "Faceted plots",
+    "text": "Faceted plots\nShow multiple aspects of the same text in subplots:\n\n# Create 3x1 subplot layout\nfig, axes = plt.subplots(3, 1, figsize=(10, 8), dpi=150, sharex=True)\n\ncomponents_data = [\n    ('raw', trajectory.raw, 'Raw Scores', 'gray'),\n    ('rolling', trajectory.rolling, 'Rolling Mean', 'steelblue'),\n    ('dct', trajectory.dct, 'DCT Smooth', 'crimson')\n]\n\nfor ax, (comp_name, data, title, color) in zip(axes, components_data):\n    x = np.linspace(0, 1, len(data))\n    ax.plot(x, data, color=color, linewidth=2)\n    ax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\n    ax.set_ylabel('Sentiment', fontsize=10)\n    ax.set_title(title, fontsize=11, fontweight='bold')\n    ax.grid(True, alpha=0.2)\n\naxes[-1].set_xlabel('Narrative Position', fontsize=11)\nfig.suptitle(f'{doc_id}: Component Breakdown', fontsize=14, fontweight='bold', y=0.995)\nplt.tight_layout()\nplt.show()\n\n\n\n\nFaceted view of trajectory components"
+  },
+  {
+    "objectID": "visualization-guide.html#exporting-publication-ready-figures",
+    "href": "visualization-guide.html#exporting-publication-ready-figures",
+    "title": "Visualization Guide",
+    "section": "Exporting publication-ready figures",
+    "text": "Exporting publication-ready figures\nSave high-resolution figures for publication:\n\n# Create publication-quality figure\nfig, ax = plt.subplots(figsize=(8, 4), dpi=300)\n\nplot_trajectory(\n    trajectory,\n    components=['dct'],\n    colors={'dct': '#1A1A1A'},\n    title='',  # No title for publication\n    ax=ax\n)\n\nax.set_xlabel('Narrative Position', fontsize=14, fontfamily='serif')\nax.set_ylabel('Sentiment', fontsize=14, fontfamily='serif')\nax.spines['top'].set_visible(False)\nax.spines['right'].set_visible(False)\nax.tick_params(labelsize=12)\n\n\n\n\n\n\n\n\n\n# Save in multiple formats\nfig.savefig('sentiment_arc.png', dpi=300, bbox_inches='tight', facecolor='white')\nfig.savefig('sentiment_arc.pdf', bbox_inches='tight')\nfig.savefig('sentiment_arc.svg', bbox_inches='tight')\n\nprint(\"Saved as PNG (300 DPI), PDF, and SVG\")\nplt.close()"
+  },
+  {
+    "objectID": "visualization-guide.html#next-steps",
+    "href": "visualization-guide.html#next-steps",
+    "title": "Visualization Guide",
+    "section": "Next steps",
+    "text": "Next steps\n\nSee the Examples Gallery for complete analysis workflows\nExplore Technical Notes for details on smoothing algorithms\nCheck the API reference for all plotting parameters"
+  },
+  {
+    "objectID": "sentiment-spacy.html",
+    "href": "sentiment-spacy.html",
+    "title": "Using spaCy for sentiment",
+    "section": "",
+    "text": "spaCy is a modern natural language processing (NLP) library that can analyze text using neural networks. Unlike dictionary-based approaches that simply look up word scores, spaCy processes sentences with machine learning models that understand context, grammar, and word relationships."
+  },
+  {
+    "objectID": "sentiment-spacy.html#dictionary-vs.-spacy-key-differences",
+    "href": "sentiment-spacy.html#dictionary-vs.-spacy-key-differences",
+    "title": "Using spaCy for sentiment",
+    "section": "Dictionary vs. spaCy: Key differences",
+    "text": "Dictionary vs. spaCy: Key differences\n\n\n\n\n\n\n\n\nAspect\nDictionary (Lexicons)\nspaCy (Neural Models)\n\n\n\n\nMethod\nLook up pre-assigned word scores\nNeural network predictions\n\n\nContext awareness\nNone (each word scored independently)\nYes (understands word relationships)\n\n\nSpeed\nVery fast (milliseconds)\nSlower (seconds to minutes)\n\n\nSetup\nNo installation needed\nRequires downloading language models\n\n\nNegation handling\nPoor (“not happy” = neutral or positive)\nGood (recognizes negation)\n\n\nDomain adaptation\nLimited to lexicon coverage\nCan train custom models"
+  },
+  {
+    "objectID": "sentiment-spacy.html#when-to-use-spacy",
+    "href": "sentiment-spacy.html#when-to-use-spacy",
+    "title": "Using spaCy for sentiment",
+    "section": "When to use spaCy",
+    "text": "When to use spaCy\nUse spaCy when: - You need context-aware sentiment (recognizing “not good” as negative) - Working with complex sentences where word order matters - You have access to a custom trained model for your domain - Accuracy is more important than speed\nUse dictionaries when: - You need fast processing of large corpora - Working with straightforward narrative text - You want transparent, explainable results - Processing time is limited (thousands of documents)"
+  },
+  {
+    "objectID": "sentiment-spacy.html#setting-up-spacy",
+    "href": "sentiment-spacy.html#setting-up-spacy",
+    "title": "Using spaCy for sentiment",
+    "section": "Setting up spaCy",
+    "text": "Setting up spaCy\nThe moodswing package already includes spaCy and spacytextblob as dependencies, so they’re installed automatically. You just need to download a language model:\npython -m spacy download en_core_web_sm\nThe en_core_web_sm model is small and fast. For better accuracy, you can use larger models like en_core_web_md or en_core_web_lg, though they will be slower."
+  },
+  {
+    "objectID": "sentiment-spacy.html#basic-usage",
+    "href": "sentiment-spacy.html#basic-usage",
+    "title": "Using spaCy for sentiment",
+    "section": "Basic usage",
+    "text": "Basic usage\n\nfrom moodswing import SpaCySentimentAnalyzer\nimport time\n\n# Initialize the analyzer (this loads the spaCy model)\nanalyzer = SpaCySentimentAnalyzer(model=\"en_core_web_sm\")\n\n\n# Analyze a simple passage\ntext = \"\"\"\nThe party was wonderful. Everyone had a great time.\nBut the cleanup was terrible and exhausting.\nWe won't make that mistake again.\n\"\"\"\n\n# Get sentiment scores\nscores = analyzer.text_scores(text)\nprint(f\"Sentence scores: {scores}\")\nprint(f\"Average sentiment: {sum(scores)/len(scores):.3f}\")\n\nSentence scores: [1.0, 0.8, -0.7, 0.0]\nAverage sentiment: 0.275"
+  },
+  {
+    "objectID": "sentiment-spacy.html#understanding-spacy-sentiment-scores",
+    "href": "sentiment-spacy.html#understanding-spacy-sentiment-scores",
+    "title": "Using spaCy for sentiment",
+    "section": "Understanding spaCy sentiment scores",
+    "text": "Understanding spaCy sentiment scores\nBy default, moodswing uses spacytextblob to generate sentiment scores. These range from -1.0 (most negative) to +1.0 (most positive), similar to the dictionary methods.\nLet’s see how spaCy handles context that dictionaries miss:\n\nfrom moodswing import DictionarySentimentAnalyzer\n\n# Create both analyzers for comparison\nspacy_analyzer = SpaCySentimentAnalyzer(model=\"en_core_web_sm\")\ndict_analyzer = DictionarySentimentAnalyzer()\n\n# Test sentences where context matters\ntest_sentences = [\n    \"The movie was good.\",\n    \"The movie was not good.\",\n    \"The movie was not bad.\",\n    \"I don't hate this.\",\n]\n\nprint(\"Dictionary vs. spaCy on context-dependent sentences:\\n\")\nfor sentence in test_sentences:\n    dict_score = dict_analyzer.sentence_scores([sentence], method=\"syuzhet\")[0]\n    spacy_score = spacy_analyzer.sentence_scores([sentence])[0]\n    print(f\"'{sentence}'\")\n    print(f\"  Dictionary: {dict_score:+.3f}\")\n    print(f\"  spaCy:      {spacy_score:+.3f}\\n\")\n\nDictionary vs. spaCy on context-dependent sentences:\n\n'The movie was good.'\n  Dictionary: +0.750\n  spaCy:      +0.700\n\n'The movie was not good.'\n  Dictionary: +0.750\n  spaCy:      -0.350\n\n'The movie was not bad.'\n  Dictionary: -0.750\n  spaCy:      +0.350\n\n'I don't hate this.'\n  Dictionary: -0.750\n  spaCy:      -0.800\n\n\n\nNotice how spaCy better handles negation (“not good” is negative, “not bad” is somewhat positive), while dictionaries often miss these contextual cues."
+  },
+  {
+    "objectID": "sentiment-spacy.html#processing-time-comparison",
+    "href": "sentiment-spacy.html#processing-time-comparison",
+    "title": "Using spaCy for sentiment",
+    "section": "Processing time comparison",
+    "text": "Processing time comparison\nLet’s measure how long each method takes on a real novel:\n\nfrom moodswing.data import load_sample_text\nfrom moodswing import Sentencizer\n\n# Load a sample novel\ndoc_id, text = load_sample_text(\"portrait_artist\")\nprint(f\"Analyzing: {doc_id}\")\n\n# Split into sentences once\nsentencizer = Sentencizer()\nsentences = sentencizer.split(text)\nprint(f\"Total sentences: {len(sentences)}\")\n\nAnalyzing: portrait_artist\nTotal sentences: 5372\n\n\n\n# Time dictionary-based analysis\nstart = time.time()\ndict_scores = dict_analyzer.sentence_scores(sentences, method=\"syuzhet\")\ndict_time = time.time() - start\n\nprint(f\"\\nDictionary (Syuzhet) analysis:\")\nprint(f\"  Time: {dict_time:.2f} seconds\")\nprint(f\"  Speed: {len(sentences)/dict_time:.0f} sentences/second\")\n\n\nDictionary (Syuzhet) analysis:\n  Time: 0.33 seconds\n  Speed: 16448 sentences/second\n\n\n\n# Time spaCy analysis\nstart = time.time()\nspacy_scores = spacy_analyzer.sentence_scores(sentences)\nspacy_time = time.time() - start\n\nprint(f\"\\nspaCy analysis:\")\nprint(f\"  Time: {spacy_time:.2f} seconds\")\nprint(f\"  Speed: {len(sentences)/spacy_time:.0f} sentences/second\")\nprint(f\"\\nspaCy is {spacy_time/dict_time:.1f}x slower than dictionary\")\n\n\nspaCy analysis:\n  Time: 15.38 seconds\n  Speed: 349 sentences/second\n\nspaCy is 47.1x slower than dictionary\n\n\n\n\n\n\n\n\nProcessing time considerations\n\n\n\nFor a typical novel (~3,000-5,000 sentences), dictionary methods complete in seconds, while spaCy can take minutes. When processing dozens or hundreds of texts, this difference becomes significant. Plan accordingly or consider using dictionaries for initial exploration, then spaCy for closer analysis of selected texts."
+  },
+  {
+    "objectID": "sentiment-spacy.html#comparing-trajectories",
+    "href": "sentiment-spacy.html#comparing-trajectories",
+    "title": "Using spaCy for sentiment",
+    "section": "Comparing trajectories",
+    "text": "Comparing trajectories\nDo the two methods produce similar narrative arcs? Let’s plot both:\n\nfrom moodswing import prepare_trajectory, plot_trajectory, DCTTransform\n\n# Prepare trajectories with identical smoothing\ntrajectory_dict = prepare_trajectory(\n    dict_scores,\n    rolling_window=int(len(dict_scores) * 0.05),\n    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=True)\n)\n\ntrajectory_spacy = prepare_trajectory(\n    spacy_scores,\n    rolling_window=int(len(spacy_scores) * 0.05),\n    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=True)\n)\n\n\nplot_trajectory(trajectory_dict, title=f\"{doc_id} - Dictionary (Syuzhet)\")\n\n\n\n\nNarrative arc using dictionary method\n\n\n\n\n\nplot_trajectory(trajectory_spacy, title=f\"{doc_id} - spaCy\")\n\n\n\n\nNarrative arc using spaCy method\n\n\n\n\nBoth methods typically reveal similar overall narrative shapes, though spaCy’s scores may be more nuanced. For literary analysis focused on broad narrative structure, dictionaries often suffice."
+  },
+  {
+    "objectID": "sentiment-spacy.html#using-custom-spacy-models",
+    "href": "sentiment-spacy.html#using-custom-spacy-models",
+    "title": "Using spaCy for sentiment",
+    "section": "Using custom spaCy models",
+    "text": "Using custom spaCy models\nIf you’ve trained a custom text classifier with spaCy (for example, a model fine-tuned on historical novels or social media), you can use it directly:\n\n# Example: Using a custom trained model\ncustom_analyzer = SpaCySentimentAnalyzer(\n    model=\"path/to/your/custom_model\",\n    positive_label=\"POSITIVE\",  # Match your training labels\n    negative_label=\"NEGATIVE\"\n)\n\nscores = custom_analyzer.text_scores(text)\n\nThe analyzer automatically detects sentiment from: 1. TextBlob polarity (if spacytextblob is available) 2. Custom doc.cats scores (from textcat models) 3. doc.sentiment attributes (if present)\nYou can also provide your own scoring function:\n\ndef custom_scorer(doc):\n    # Your custom logic here\n    # Return a float between -1 and 1\n    return some_calculation(doc)\n\nanalyzer = SpaCySentimentAnalyzer(\n    model=\"en_core_web_sm\",\n    scorer=custom_scorer\n)"
+  },
+  {
+    "objectID": "sentiment-spacy.html#batch-processing-for-efficiency",
+    "href": "sentiment-spacy.html#batch-processing-for-efficiency",
+    "title": "Using spaCy for sentiment",
+    "section": "Batch processing for efficiency",
+    "text": "Batch processing for efficiency\nWhen analyzing multiple texts with spaCy, process them together to take advantage of batching:\n\n# Less efficient: analyzing one at a time\n# for text in texts:\n#     scores = analyzer.text_scores(text)\n\n# More efficient: process a batch\nfrom moodswing.data import iter_sample_texts\n\n# Get multiple texts\ntexts = list(iter_sample_texts())\nprint(f\"Processing {len(texts)} texts...\")\n\n# The analyzer automatically uses spaCy's efficient .pipe() internally\nstart = time.time()\nall_scores = [analyzer.text_scores(text) for doc_id, text in texts[:3]]  # Just first 3 for demo\nbatch_time = time.time() - start\n\nprint(f\"Processed {len(all_scores)} texts in {batch_time:.2f} seconds\")\n\nProcessing 4 texts...\nProcessed 3 texts in 87.63 seconds"
+  },
+  {
+    "objectID": "sentiment-spacy.html#choosing-between-methods-a-decision-tree",
+    "href": "sentiment-spacy.html#choosing-between-methods-a-decision-tree",
+    "title": "Using spaCy for sentiment",
+    "section": "Choosing between methods: A decision tree",
+    "text": "Choosing between methods: A decision tree\nAre you analyzing 100+ documents?\n├─ YES → Use dictionaries (much faster)\n└─ NO\n    └─ Does context matter (negation, irony, complex syntax)?\n        ├─ YES → Consider spaCy\n        └─ NO → Use dictionaries (simpler, transparent)\n            └─ Do you have a domain-specific trained model?\n                ├─ YES → Use spaCy with custom model\n                └─ NO → Stick with dictionaries"
+  },
+  {
+    "objectID": "sentiment-spacy.html#best-practices",
+    "href": "sentiment-spacy.html#best-practices",
+    "title": "Using spaCy for sentiment",
+    "section": "Best practices",
+    "text": "Best practices\nFor exploratory analysis: 1. Start with dictionary methods (fast iteration) 2. Identify interesting texts or sections 3. Apply spaCy to those specific areas for detailed analysis\nFor production pipelines: 1. If processing &lt;100 texts: spaCy is feasible 2. If processing 100-1000 texts: dictionaries recommended 3. If processing 1000+ texts: definitely use dictionaries or consider cloud GPU resources for spaCy\nFor publication: - Document which method you used and why - Consider reporting both methods to show robustness - If using spaCy, specify the exact model version used\n\n\n\n\n\n\nHybrid approach\n\n\n\nYou don’t have to choose just one method! Use dictionaries for initial exploration and large-scale processing, then apply spaCy to specific passages where context sensitivity matters—like dialogue, ironic passages, or climactic scenes where nuance is critical."
+  },
+  {
+    "objectID": "sentiment-spacy.html#next-steps",
+    "href": "sentiment-spacy.html#next-steps",
+    "title": "Using spaCy for sentiment",
+    "section": "Next steps",
+    "text": "Next steps\n\nReview technical notes for implementation details\nExplore sentiment lexicons for dictionary-based alternatives\nCheck the API reference for SpaCySentimentAnalyzer parameters"
+  },
+  {
+    "objectID": "reference/SpaCySentimentAnalyzer.text_scores.html",
+    "href": "reference/SpaCySentimentAnalyzer.text_scores.html",
+    "title": "SpaCySentimentAnalyzer.text_scores",
+    "section": "",
+    "text": "sentiment.SpaCySentimentAnalyzer.text_scores(text)\nSplit raw text into sentences and score each one.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nFull document or iterable of segments to analyze.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nSentiment score per detected sentence."
+  },
+  {
+    "objectID": "reference/SpaCySentimentAnalyzer.text_scores.html#parameters",
+    "href": "reference/SpaCySentimentAnalyzer.text_scores.html#parameters",
+    "title": "SpaCySentimentAnalyzer.text_scores",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nFull document or iterable of segments to analyze.\nrequired"
+  },
+  {
+    "objectID": "reference/SpaCySentimentAnalyzer.text_scores.html#returns",
+    "href": "reference/SpaCySentimentAnalyzer.text_scores.html#returns",
+    "title": "SpaCySentimentAnalyzer.text_scores",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nlist[float]\nSentiment score per detected sentence."
+  },
+  {
+    "objectID": "reference/plot_trajectory.html",
+    "href": "reference/plot_trajectory.html",
+    "title": "plot_trajectory",
+    "section": "",
+    "text": "viz.plot_trajectory(\n    trajectory,\n    *,\n    title='Sentiment Trajectory',\n    legend_loc='upper right',\n    colors=None,\n    components=None,\n    ax=None,\n)\nRender a sentiment trajectory with optional overlays.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntrajectory\nTrajectoryComponents\nRaw and smoothed signals (as returned by :func:prepare_trajectory).\nrequired\n\n\ntitle\nstr\nMatplotlib axes title.\n'Sentiment Trajectory'\n\n\nlegend_loc\nstr\nLegend placement passed to :meth:matplotlib.axes.Axes.legend.\n'upper right'\n\n\ncolors\ndict[str, str]\nCustom colors for plot components. Keys can be \"raw\", \"rolling\", and/or \"dct\". Defaults to grey, blue, and red respectively if not specified.\nNone\n\n\ncomponents\nset[str] | list[str]\nWhich components to display. Can include \"raw\", \"rolling\", and/or \"dct\". If None (default), all available components are shown. Use this to reduce visual clutter by showing only specific trajectories.\nNone\n\n\nax\nmatplotlib.axes.Axes\nAxes to draw on. Defaults to plt.gca().\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nmatplotlib.axes.Axes\nAxes containing the plotted trajectory.\n\n\n\n\n\n\n&gt;&gt;&gt; # Use custom colors\n&gt;&gt;&gt; plot_trajectory(\n...     trajectory,\n...     colors={\"raw\": \"lightgray\", \"rolling\": \"green\", \"dct\": \"purple\"}\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Show only the DCT smoothed line\n&gt;&gt;&gt; plot_trajectory(trajectory, components=[\"dct\"])\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Custom figure size with specific components\n&gt;&gt;&gt; fig, ax = plt.subplots(figsize=(10, 5), dpi=150)\n&gt;&gt;&gt; plot_trajectory(trajectory, components=[\"rolling\", \"dct\"], ax=ax)"
+  },
+  {
+    "objectID": "reference/plot_trajectory.html#parameters",
+    "href": "reference/plot_trajectory.html#parameters",
+    "title": "plot_trajectory",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ntrajectory\nTrajectoryComponents\nRaw and smoothed signals (as returned by :func:prepare_trajectory).\nrequired\n\n\ntitle\nstr\nMatplotlib axes title.\n'Sentiment Trajectory'\n\n\nlegend_loc\nstr\nLegend placement passed to :meth:matplotlib.axes.Axes.legend.\n'upper right'\n\n\ncolors\ndict[str, str]\nCustom colors for plot components. Keys can be \"raw\", \"rolling\", and/or \"dct\". Defaults to grey, blue, and red respectively if not specified.\nNone\n\n\ncomponents\nset[str] | list[str]\nWhich components to display. Can include \"raw\", \"rolling\", and/or \"dct\". If None (default), all available components are shown. Use this to reduce visual clutter by showing only specific trajectories.\nNone\n\n\nax\nmatplotlib.axes.Axes\nAxes to draw on. Defaults to plt.gca().\nNone"
+  },
+  {
+    "objectID": "reference/plot_trajectory.html#returns",
+    "href": "reference/plot_trajectory.html#returns",
+    "title": "plot_trajectory",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nmatplotlib.axes.Axes\nAxes containing the plotted trajectory."
+  },
+  {
+    "objectID": "reference/plot_trajectory.html#examples",
+    "href": "reference/plot_trajectory.html#examples",
+    "title": "plot_trajectory",
+    "section": "",
+    "text": "&gt;&gt;&gt; # Use custom colors\n&gt;&gt;&gt; plot_trajectory(\n...     trajectory,\n...     colors={\"raw\": \"lightgray\", \"rolling\": \"green\", \"dct\": \"purple\"}\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Show only the DCT smoothed line\n&gt;&gt;&gt; plot_trajectory(trajectory, components=[\"dct\"])\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Custom figure size with specific components\n&gt;&gt;&gt; fig, ax = plt.subplots(figsize=(10, 5), dpi=150)\n&gt;&gt;&gt; plot_trajectory(trajectory, components=[\"rolling\", \"dct\"], ax=ax)"
+  },
+  {
+    "objectID": "reference/MixedMessageResult.html",
+    "href": "reference/MixedMessageResult.html",
+    "title": "MixedMessageResult",
+    "section": "",
+    "text": "MixedMessageResult(entropy, normalized_entropy)\nResult from analyzing mixed sentiment signals.\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nentropy\nfloat\nShannon entropy over positive/negative token distribution. Higher values indicate more mixed or ambiguous sentiment.\n\n\nnormalized_entropy\nfloat\nEntropy normalized by the total number of tokens, providing a length-independent measure of sentiment mixing."
+  },
+  {
+    "objectID": "reference/MixedMessageResult.html#attributes",
+    "href": "reference/MixedMessageResult.html#attributes",
+    "title": "MixedMessageResult",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\nentropy\nfloat\nShannon entropy over positive/negative token distribution. Higher values indicate more mixed or ambiguous sentiment.\n\n\nnormalized_entropy\nfloat\nEntropy normalized by the total number of tokens, providing a length-independent measure of sentiment mixing."
+  },
+  {
+    "objectID": "reference/load_text_file.html",
+    "href": "reference/load_text_file.html",
+    "title": "load_text_file",
+    "section": "",
+    "text": "data.load_text_file(path, *, strict_ascii=True)\nRead a single .txt file and return a cleaned {doc_id, text} record.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nstr | Path\nFile to read.\nrequired\n\n\nstrict_ascii\nbool\nDrop non-ASCII bytes when True (default) to sidestep spaCy model quirks on unusual characters.\nTrue"
+  },
+  {
+    "objectID": "reference/load_text_file.html#parameters",
+    "href": "reference/load_text_file.html#parameters",
+    "title": "load_text_file",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\npath\nstr | Path\nFile to read.\nrequired\n\n\nstrict_ascii\nbool\nDrop non-ASCII bytes when True (default) to sidestep spaCy model quirks on unusual characters.\nTrue"
+  },
+  {
+    "objectID": "reference/DCTTransform.html",
+    "href": "reference/DCTTransform.html",
+    "title": "DCTTransform",
+    "section": "",
+    "text": "transforms.DCTTransform(\n    low_pass_size=5,\n    output_length=100,\n    scale_range=False,\n    scale_values=False,\n)\nCompute a low-pass discrete cosine transform.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlow_pass_size\nint\nNumber of DCT frequency components to retain. Lower values produce smoother curves. Defaults to 5. - 2-5: Very smooth, broad narrative patterns only - 5-10: Balanced smoothing (recommended for most uses) - 10-20: Preserves more detail, shows secondary peaks - &gt;20: Minimal smoothing, may retain noise\n5\n\n\noutput_length\nint\nNumber of points in the interpolated output. Defaults to 100. Common values: 100-200 for visualization, 1000+ for analysis.\n100\n\n\nscale_range\nbool\nWhen True, rescale output to [-1, 1]. Mutually exclusive with scale_values. Use for comparing texts on a common scale.\nFalse\n\n\nscale_values\nbool\nWhen True, standardize output (mean=0, std=1). Mutually exclusive with scale_range. Use for statistical analysis.\nFalse\n\n\n\n\n\n\n&gt;&gt;&gt; # Smooth smoothing for broad patterns\n&gt;&gt;&gt; dct_smooth = DCTTransform(low_pass_size=5, output_length=100)\n&gt;&gt;&gt; smoothed = dct_smooth.transform(raw_scores)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # More detail, normalized range\n&gt;&gt;&gt; dct_detailed = DCTTransform(\n...     low_pass_size=15,\n...     output_length=200,\n...     scale_range=True\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # For statistical comparison across texts\n&gt;&gt;&gt; dct_stats = DCTTransform(scale_values=True)\n\n\n\nYou cannot set both scale_range and scale_values to True. Choose one based on your use case:\n\nUse scale_range=True for visualization and direct comparison\nUse scale_values=True for statistical analysis\nUse neither for preserving original scale"
+  },
+  {
+    "objectID": "reference/DCTTransform.html#parameters",
+    "href": "reference/DCTTransform.html#parameters",
+    "title": "DCTTransform",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nlow_pass_size\nint\nNumber of DCT frequency components to retain. Lower values produce smoother curves. Defaults to 5. - 2-5: Very smooth, broad narrative patterns only - 5-10: Balanced smoothing (recommended for most uses) - 10-20: Preserves more detail, shows secondary peaks - &gt;20: Minimal smoothing, may retain noise\n5\n\n\noutput_length\nint\nNumber of points in the interpolated output. Defaults to 100. Common values: 100-200 for visualization, 1000+ for analysis.\n100\n\n\nscale_range\nbool\nWhen True, rescale output to [-1, 1]. Mutually exclusive with scale_values. Use for comparing texts on a common scale.\nFalse\n\n\nscale_values\nbool\nWhen True, standardize output (mean=0, std=1). Mutually exclusive with scale_range. Use for statistical analysis.\nFalse"
+  },
+  {
+    "objectID": "reference/DCTTransform.html#examples",
+    "href": "reference/DCTTransform.html#examples",
+    "title": "DCTTransform",
+    "section": "",
+    "text": "&gt;&gt;&gt; # Smooth smoothing for broad patterns\n&gt;&gt;&gt; dct_smooth = DCTTransform(low_pass_size=5, output_length=100)\n&gt;&gt;&gt; smoothed = dct_smooth.transform(raw_scores)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # More detail, normalized range\n&gt;&gt;&gt; dct_detailed = DCTTransform(\n...     low_pass_size=15,\n...     output_length=200,\n...     scale_range=True\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # For statistical comparison across texts\n&gt;&gt;&gt; dct_stats = DCTTransform(scale_values=True)"
+  },
+  {
+    "objectID": "reference/DCTTransform.html#notes",
+    "href": "reference/DCTTransform.html#notes",
+    "title": "DCTTransform",
+    "section": "",
+    "text": "You cannot set both scale_range and scale_values to True. Choose one based on your use case:\n\nUse scale_range=True for visualization and direct comparison\nUse scale_values=True for statistical analysis\nUse neither for preserving original scale"
+  },
+  {
+    "objectID": "reference/list_sample_texts.html",
+    "href": "reference/list_sample_texts.html",
+    "title": "list_sample_texts",
+    "section": "",
+    "text": "data.list_sample_texts(filename=_DEFAULT_SAMPLE)\nReturn a list of available document IDs from the bundled sample corpus.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfilename\nstr\nName of the pickled corpus file to query.\n_DEFAULT_SAMPLE\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[str]\nDocument IDs of all available sample texts.\n\n\n\n\n\n\n&gt;&gt;&gt; from moodswing.data import list_sample_texts\n&gt;&gt;&gt; available = list_sample_texts()\n&gt;&gt;&gt; print(available)\n['madame_bovary', 'portrait_of_the_artist', ...]"
+  },
+  {
+    "objectID": "reference/list_sample_texts.html#parameters",
+    "href": "reference/list_sample_texts.html#parameters",
+    "title": "list_sample_texts",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nfilename\nstr\nName of the pickled corpus file to query.\n_DEFAULT_SAMPLE"
+  },
+  {
+    "objectID": "reference/list_sample_texts.html#returns",
+    "href": "reference/list_sample_texts.html#returns",
+    "title": "list_sample_texts",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nlist[str]\nDocument IDs of all available sample texts."
+  },
+  {
+    "objectID": "reference/list_sample_texts.html#examples",
+    "href": "reference/list_sample_texts.html#examples",
+    "title": "list_sample_texts",
+    "section": "",
+    "text": "&gt;&gt;&gt; from moodswing.data import list_sample_texts\n&gt;&gt;&gt; available = list_sample_texts()\n&gt;&gt;&gt; print(available)\n['madame_bovary', 'portrait_of_the_artist', ...]"
+  },
+  {
+    "objectID": "reference/TrajectoryComponents.html",
+    "href": "reference/TrajectoryComponents.html",
+    "title": "TrajectoryComponents",
+    "section": "",
+    "text": "TrajectoryComponents(raw, rolling, dct)\nContainer holding raw and smoothed signals.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nraw\nnumpy.ndarray\nBase sentiment signal (typically per sentence or paragraph).\nrequired\n\n\nrolling\nnumpy.ndarray | None\nOptional rolling-average smoothing of raw.\nrequired\n\n\ndct\nnumpy.ndarray | None\nOptional discrete cosine transform smoothing of raw.\nrequired"
+  },
+  {
+    "objectID": "reference/TrajectoryComponents.html#parameters",
+    "href": "reference/TrajectoryComponents.html#parameters",
+    "title": "TrajectoryComponents",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nraw\nnumpy.ndarray\nBase sentiment signal (typically per sentence or paragraph).\nrequired\n\n\nrolling\nnumpy.ndarray | None\nOptional rolling-average smoothing of raw.\nrequired\n\n\ndct\nnumpy.ndarray | None\nOptional discrete cosine transform smoothing of raw.\nrequired"
+  },
+  {
+    "objectID": "reference/DictionarySentimentAnalyzer.html",
+    "href": "reference/DictionarySentimentAnalyzer.html",
+    "title": "DictionarySentimentAnalyzer",
+    "section": "",
+    "text": "sentiment.DictionarySentimentAnalyzer(\n    loader=LexiconLoader(),\n    tokenizer=Tokenizer(),\n    sentencizer=Sentencizer(),\n)\nSentence-level sentiment scoring built on dictionary lookups.\n\n\n\n\n\nName\nDescription\n\n\n\n\nmixed_messages\nCompute Shannon entropy to quantify mixed sentiment signals.\n\n\nnrc_emotions\nAggregate NRC-style emotion counts for each sentence.\n\n\nsentence_scores\nReturn one sentiment score per sentence.\n\n\ntext_scores\nSplit full text into sentences and score each one.\n\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.mixed_messages(\n    text,\n    *,\n    method=_DEFAULT_METHOD,\n    drop_neutral=True,\n)\nCompute Shannon entropy to quantify mixed sentiment signals.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nDocument (or sequence of segments) to analyze.\nrequired\n\n\nmethod\nstr\nLexicon name to use when determining positive/negative tokens.\n_DEFAULT_METHOD\n\n\ndrop_neutral\nbool\nWhen True (default), neutral words are excluded from the entropy calculation.\nTrue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nMixedMessageResult\nNamed result containing entropy (Shannon entropy over positive/negative distribution) and normalized_entropy (entropy divided by token count for length-independent measure).\n\n\n\n\n\n\n&gt;&gt;&gt; analyzer = DictionarySentimentAnalyzer()\n&gt;&gt;&gt; result = analyzer.mixed_messages(\"I love it but I hate it.\")\n&gt;&gt;&gt; result.entropy  # Higher values indicate more mixing\n&gt;&gt;&gt; result.normalized_entropy  # Length-normalized version\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.nrc_emotions(\n    sentences,\n    *,\n    language='english',\n    lexicon=None,\n    categories=None,\n)\nAggregate NRC-style emotion counts for each sentence.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences to analyze.\nrequired\n\n\nlanguage\nstr\nLanguage tag for loading NRC variants.\n'english'\n\n\nlexicon\nEmotionLexicon\nSpecific NRC emotion lexicon to reuse.\nNone\n\n\ncategories\nIterable[str]\nRestrict the output to a subset of emotion labels.\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[dict[str, float]]\nPer-sentence mappings from emotion label to aggregated weight.\n\n\n\n\n\n\n&gt;&gt;&gt; from moodswing import DictionarySentimentAnalyzer\n&gt;&gt;&gt; import pandas as pd\n&gt;&gt;&gt;\n&gt;&gt;&gt; analyzer = DictionarySentimentAnalyzer()\n&gt;&gt;&gt; sentences = [\"I love sunny days!\", \"The storm was terrifying.\"]\n&gt;&gt;&gt; emotions = analyzer.nrc_emotions(sentences)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Convert to DataFrame for easy viewing\n&gt;&gt;&gt; df = pd.DataFrame(emotions)\n&gt;&gt;&gt; print(df[['joy', 'fear', 'positive', 'negative']])\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Analyze only specific emotions\n&gt;&gt;&gt; fear_joy = analyzer.nrc_emotions(\n...     sentences,\n...     categories=['fear', 'joy']\n... )\n&gt;&gt;&gt; df_fear_joy = pd.DataFrame(fear_joy)\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.sentence_scores(\n    sentences,\n    *,\n    method=_DEFAULT_METHOD,\n    language='english',\n    lexicon=None,\n)\nReturn one sentiment score per sentence.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences that have already been split from the source text.\nrequired\n\n\nmethod\nstr\nName of the dictionary lexicon to use (syuzhet, bing, etc.).\n_DEFAULT_METHOD\n\n\nlanguage\nstr\nLanguage tag used when loading multilingual lexicons such as NRC.\n'english'\n\n\nlexicon\nSentimentLexicon\nPreloaded lexicon. Provide this when you want to reuse the same instance across multiple calls to avoid I/O.\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nOne numeric sentiment score for each input sentence.\n\n\n\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.text_scores(\n    text,\n    *,\n    method=_DEFAULT_METHOD,\n    language='english',\n    lexicon=None,\n)\nSplit full text into sentences and score each one.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nEither a single string (the full document) or an iterable of pre-separated paragraphs/segments.\nrequired\n\n\nmethod\nstr\nLexicon name passed to :func:sentence_scores.\n_DEFAULT_METHOD\n\n\nlanguage\nstr\nLanguage tag used when loading the lexicon.\n'english'\n\n\nlexicon\nSentimentLexicon\nPreloaded lexicon that overrides the automatic loader.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nSentiment score per detected sentence."
+  },
+  {
+    "objectID": "reference/DictionarySentimentAnalyzer.html#methods",
+    "href": "reference/DictionarySentimentAnalyzer.html#methods",
+    "title": "DictionarySentimentAnalyzer",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nmixed_messages\nCompute Shannon entropy to quantify mixed sentiment signals.\n\n\nnrc_emotions\nAggregate NRC-style emotion counts for each sentence.\n\n\nsentence_scores\nReturn one sentiment score per sentence.\n\n\ntext_scores\nSplit full text into sentences and score each one.\n\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.mixed_messages(\n    text,\n    *,\n    method=_DEFAULT_METHOD,\n    drop_neutral=True,\n)\nCompute Shannon entropy to quantify mixed sentiment signals.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nDocument (or sequence of segments) to analyze.\nrequired\n\n\nmethod\nstr\nLexicon name to use when determining positive/negative tokens.\n_DEFAULT_METHOD\n\n\ndrop_neutral\nbool\nWhen True (default), neutral words are excluded from the entropy calculation.\nTrue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nMixedMessageResult\nNamed result containing entropy (Shannon entropy over positive/negative distribution) and normalized_entropy (entropy divided by token count for length-independent measure).\n\n\n\n\n\n\n&gt;&gt;&gt; analyzer = DictionarySentimentAnalyzer()\n&gt;&gt;&gt; result = analyzer.mixed_messages(\"I love it but I hate it.\")\n&gt;&gt;&gt; result.entropy  # Higher values indicate more mixing\n&gt;&gt;&gt; result.normalized_entropy  # Length-normalized version\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.nrc_emotions(\n    sentences,\n    *,\n    language='english',\n    lexicon=None,\n    categories=None,\n)\nAggregate NRC-style emotion counts for each sentence.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences to analyze.\nrequired\n\n\nlanguage\nstr\nLanguage tag for loading NRC variants.\n'english'\n\n\nlexicon\nEmotionLexicon\nSpecific NRC emotion lexicon to reuse.\nNone\n\n\ncategories\nIterable[str]\nRestrict the output to a subset of emotion labels.\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[dict[str, float]]\nPer-sentence mappings from emotion label to aggregated weight.\n\n\n\n\n\n\n&gt;&gt;&gt; from moodswing import DictionarySentimentAnalyzer\n&gt;&gt;&gt; import pandas as pd\n&gt;&gt;&gt;\n&gt;&gt;&gt; analyzer = DictionarySentimentAnalyzer()\n&gt;&gt;&gt; sentences = [\"I love sunny days!\", \"The storm was terrifying.\"]\n&gt;&gt;&gt; emotions = analyzer.nrc_emotions(sentences)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Convert to DataFrame for easy viewing\n&gt;&gt;&gt; df = pd.DataFrame(emotions)\n&gt;&gt;&gt; print(df[['joy', 'fear', 'positive', 'negative']])\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Analyze only specific emotions\n&gt;&gt;&gt; fear_joy = analyzer.nrc_emotions(\n...     sentences,\n...     categories=['fear', 'joy']\n... )\n&gt;&gt;&gt; df_fear_joy = pd.DataFrame(fear_joy)\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.sentence_scores(\n    sentences,\n    *,\n    method=_DEFAULT_METHOD,\n    language='english',\n    lexicon=None,\n)\nReturn one sentiment score per sentence.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences that have already been split from the source text.\nrequired\n\n\nmethod\nstr\nName of the dictionary lexicon to use (syuzhet, bing, etc.).\n_DEFAULT_METHOD\n\n\nlanguage\nstr\nLanguage tag used when loading multilingual lexicons such as NRC.\n'english'\n\n\nlexicon\nSentimentLexicon\nPreloaded lexicon. Provide this when you want to reuse the same instance across multiple calls to avoid I/O.\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nOne numeric sentiment score for each input sentence.\n\n\n\n\n\n\n\nsentiment.DictionarySentimentAnalyzer.text_scores(\n    text,\n    *,\n    method=_DEFAULT_METHOD,\n    language='english',\n    lexicon=None,\n)\nSplit full text into sentences and score each one.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nEither a single string (the full document) or an iterable of pre-separated paragraphs/segments.\nrequired\n\n\nmethod\nstr\nLexicon name passed to :func:sentence_scores.\n_DEFAULT_METHOD\n\n\nlanguage\nstr\nLanguage tag used when loading the lexicon.\n'english'\n\n\nlexicon\nSentimentLexicon\nPreloaded lexicon that overrides the automatic loader.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nSentiment score per detected sentence."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "moodswing",
+    "section": "",
+    "text": "moodswing helps you trace the emotional beats of novels, memoirs, or other long texts. Inspired by Matthew Jockers’ syuzhet, it keeps the same story arc workflow but makes every step available inside a modern Python notebook."
+  },
+  {
+    "objectID": "index.html#why-use-moodswing",
+    "href": "index.html#why-use-moodswing",
+    "title": "moodswing",
+    "section": "Why use moodswing?",
+    "text": "Why use moodswing?\n\nFamiliar sentiment dictionaries are built in. NRC, Bing, AFINN, and Syuzhet ship with the package, so you can describe a story’s “mood swings” using lists of words you may already know from the R ecosystem.\nModern NLP is optional but ready. If you install spaCy, moodswing can split sentences and estimate sentiment using pretrained English models (or your own pipeline). It even attaches TextBlob-like sentiment automatically when needed.\nPlots highlight the story arc. Built-in smoothing turns raw sentence scores into the gentle curves popularized by syuzhet, making it easy to point at climaxes, reversals, and endings during analysis or teaching.\nOne workflow fits poets and programmers alike. Everything runs in Jupyter, but there’s also a one-line command for batch plots when you just need pictures."
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "moodswing",
+    "section": "Installation",
+    "text": "Installation\npip install moodswing\nIf you plan to use the spaCy analyzer, install a language model too (for example python -m spacy download en_core_web_sm)."
+  },
+  {
+    "objectID": "index.html#quick-start",
+    "href": "index.html#quick-start",
+    "title": "moodswing",
+    "section": "Quick start",
+    "text": "Quick start\nLet’s walk through the entire pipeline with inline comments. We will load one of the bundled sample novels, split it into sentences, score each sentence with the Syuzhet dictionary, smooth the series, and plot the resulting narrative arc.\n\nfrom moodswing import (\n    DictionarySentimentAnalyzer,\n    Sentencizer,\n    DCTTransform,\n    prepare_trajectory,\n    plot_trajectory,\n)\nfrom moodswing.data import load_sample_text\n\n# Load one of the packaged novels. Specify an id (e.g., \"madame_bovary\") or\n# leave it blank to grab whichever sample is listed first.\ndoc_id, text = load_sample_text(\"madame_bovary\")\nprint(f\"Analyzing sample text: {doc_id}\")\n\n# 1. Break the novel into sentences; Punkt (via NLTK) handles abbreviations.\nsentences = Sentencizer().split(text)\n\n# 2. Score each sentence with the Syuzhet dictionary (positive vs. negative words).\nanalyzer = DictionarySentimentAnalyzer()\nscores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\n\n# 3. Smooth the jagged series so the overall emotional arc is easy to read.\ntrajectory = prepare_trajectory(\n    scores,\n    rolling_window=max(3, int(len(scores) * 0.1)),\n    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=True),\n)\n\n# 4. Plot the three lines: raw (grey), rolling average (blue), DCT curve (red).\nplot_trajectory(trajectory, title=\"Sample Narrative Arc\");\n\nAnalyzing sample text: madame_bovary\n\n\n/tmp/ipykernel_2550/1774698215.py:23: UserWarning:\n\nDCT transform already has scaling enabled (scale_range=True, scale_values=False). Skipping additional normalization of DCT output to prevent double-scaling. Raw and rolling components are still normalized."
+  },
+  {
+    "objectID": "index.html#switch-to-spacy-sentiment",
+    "href": "index.html#switch-to-spacy-sentiment",
+    "title": "moodswing",
+    "section": "Switch to spaCy sentiment",
+    "text": "Switch to spaCy sentiment\nPrefer a neural model? Swap the analyzer—everything else stays the same because spaCy still returns one score per sentence.\n\nfrom moodswing import SpaCySentimentAnalyzer\n\nspacy_analyzer = SpaCySentimentAnalyzer(model=\"en_core_web_sm\")\nspacy_scores = spacy_analyzer.text_scores(text)\n\n# Reuse the same smoothing + plotting steps from the quick start above.\n\n\n\n\n\n\n\nProcessing speed\n\n\n\nDictionary lookups finish quickly, even on a laptop. spaCy pipelines do more work (tagging, parsing, sometimes TextBlob sentiment), so give them a little patience or process books in batches."
+  },
+  {
+    "objectID": "index.html#command-line-helper",
+    "href": "index.html#command-line-helper",
+    "title": "moodswing",
+    "section": "Command-line helper",
+    "text": "Command-line helper\nNeed PNGs without opening a notebook? Install the package and run:\nmoodswing-sample-plots --analyzer spacy\nBy default the command loads the bundled sample novels and writes PNGs into a sample_plots/ folder. The CLI creates that directory automatically if it does not already exist.\nPass --input path/to/your_texts.pkl to point at your own pickled list of {doc_id, text} records, and --output some/folder to change where the PNGs land. In notebooks, you can call moodswing.cli.sample_plots.make_plot(..., output_dir=None) to grab a live matplotlib.figure.Figure and display it inline instead of writing files."
+  },
+  {
+    "objectID": "index.html#next-steps",
+    "href": "index.html#next-steps",
+    "title": "moodswing",
+    "section": "Next steps",
+    "text": "Next steps\n\nContinue to Get started for a detailed walkthrough with scholarly background and citations\nExplore Using sentiment lexicons to understand the differences between Syuzhet, AFINN, Bing, and NRC dictionaries\nLearn about Using spaCy for sentiment for context-aware analysis with neural models\nRead Technical Notes for implementation details, DCT mathematics, and R compatibility\nBrowse the API reference for complete docstrings and parameter details"
+  },
+  {
+    "objectID": "reference/DictionarySentimentAnalyzer.sentence_scores.html",
+    "href": "reference/DictionarySentimentAnalyzer.sentence_scores.html",
+    "title": "DictionarySentimentAnalyzer.sentence_scores",
+    "section": "",
+    "text": "sentiment.DictionarySentimentAnalyzer.sentence_scores(\n    sentences,\n    *,\n    method=_DEFAULT_METHOD,\n    language='english',\n    lexicon=None,\n)\nReturn one sentiment score per sentence.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences that have already been split from the source text.\nrequired\n\n\nmethod\nstr\nName of the dictionary lexicon to use (syuzhet, bing, etc.).\n_DEFAULT_METHOD\n\n\nlanguage\nstr\nLanguage tag used when loading multilingual lexicons such as NRC.\n'english'\n\n\nlexicon\nSentimentLexicon\nPreloaded lexicon. Provide this when you want to reuse the same instance across multiple calls to avoid I/O.\nNone\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nOne numeric sentiment score for each input sentence."
+  },
+  {
+    "objectID": "reference/DictionarySentimentAnalyzer.sentence_scores.html#parameters",
+    "href": "reference/DictionarySentimentAnalyzer.sentence_scores.html#parameters",
+    "title": "DictionarySentimentAnalyzer.sentence_scores",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences that have already been split from the source text.\nrequired\n\n\nmethod\nstr\nName of the dictionary lexicon to use (syuzhet, bing, etc.).\n_DEFAULT_METHOD\n\n\nlanguage\nstr\nLanguage tag used when loading multilingual lexicons such as NRC.\n'english'\n\n\nlexicon\nSentimentLexicon\nPreloaded lexicon. Provide this when you want to reuse the same instance across multiple calls to avoid I/O.\nNone"
+  },
+  {
+    "objectID": "reference/DictionarySentimentAnalyzer.sentence_scores.html#returns",
+    "href": "reference/DictionarySentimentAnalyzer.sentence_scores.html#returns",
+    "title": "DictionarySentimentAnalyzer.sentence_scores",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nlist[float]\nOne numeric sentiment score for each input sentence."
+  },
+  {
+    "objectID": "reference/index.html",
+    "href": "reference/index.html",
+    "title": "Reference",
+    "section": "",
+    "text": "Utilities for getting raw text into the workflow.\n\n\n\nload_sample_text\nReturn a single (doc_id, text) pair from the bundled sample corpus.\n\n\nlist_sample_texts\nReturn a list of available document IDs from the bundled sample corpus.\n\n\nload_text_file\nRead a single .txt file and return a cleaned {doc_id, text} record.\n\n\n\n\n\n\nDictionary and spaCy-based sentiment scoring interfaces.\n\n\n\nDictionarySentimentAnalyzer\nSentence-level sentiment scoring built on dictionary lookups.\n\n\nSpaCySentimentAnalyzer\nDerive per-sentence sentiment values from a spaCy pipeline.\n\n\nDictionarySentimentAnalyzer.sentence_scores\nReturn one sentiment score per sentence.\n\n\nSpaCySentimentAnalyzer.text_scores\nSplit raw text into sentences and score each one.\n\n\n\n\n\n\nResult containers and data structures.\n\n\n\nMixedMessageResult\nResult from analyzing mixed sentiment signals.\n\n\nTrajectoryComponents\nContainer holding raw and smoothed signals.\n\n\n\n\n\n\nTransform helpers for plotting narrative sentiment curves.\n\n\n\nDCTTransform\nCompute a low-pass discrete cosine transform.\n\n\nrolling_mean\nCompute a rolling (moving) average over a sequence of values.\n\n\n\n\n\n\nHigh-level helpers for preparing and plotting trajectories.\n\n\n\nprepare_trajectory\nCompute optional smoothing passes for a sentiment signal.\n\n\nplot_trajectory\nRender a sentiment trajectory with optional overlays.\n\n\ntrajectory_to_dataframe\nConvert trajectory components to a tidy pandas DataFrame."
+  },
+  {
+    "objectID": "reference/index.html#loading-text",
+    "href": "reference/index.html#loading-text",
+    "title": "Reference",
+    "section": "",
+    "text": "Utilities for getting raw text into the workflow.\n\n\n\nload_sample_text\nReturn a single (doc_id, text) pair from the bundled sample corpus.\n\n\nlist_sample_texts\nReturn a list of available document IDs from the bundled sample corpus.\n\n\nload_text_file\nRead a single .txt file and return a cleaned {doc_id, text} record."
+  },
+  {
+    "objectID": "reference/index.html#sentiment-analyzers",
+    "href": "reference/index.html#sentiment-analyzers",
+    "title": "Reference",
+    "section": "",
+    "text": "Dictionary and spaCy-based sentiment scoring interfaces.\n\n\n\nDictionarySentimentAnalyzer\nSentence-level sentiment scoring built on dictionary lookups.\n\n\nSpaCySentimentAnalyzer\nDerive per-sentence sentiment values from a spaCy pipeline.\n\n\nDictionarySentimentAnalyzer.sentence_scores\nReturn one sentiment score per sentence.\n\n\nSpaCySentimentAnalyzer.text_scores\nSplit raw text into sentences and score each one."
+  },
+  {
+    "objectID": "reference/index.html#data-types",
+    "href": "reference/index.html#data-types",
+    "title": "Reference",
+    "section": "",
+    "text": "Result containers and data structures.\n\n\n\nMixedMessageResult\nResult from analyzing mixed sentiment signals.\n\n\nTrajectoryComponents\nContainer holding raw and smoothed signals."
+  },
+  {
+    "objectID": "reference/index.html#trajectory-tools",
+    "href": "reference/index.html#trajectory-tools",
+    "title": "Reference",
+    "section": "",
+    "text": "Transform helpers for plotting narrative sentiment curves.\n\n\n\nDCTTransform\nCompute a low-pass discrete cosine transform.\n\n\nrolling_mean\nCompute a rolling (moving) average over a sequence of values."
+  },
+  {
+    "objectID": "reference/index.html#visualization",
+    "href": "reference/index.html#visualization",
+    "title": "Reference",
+    "section": "",
+    "text": "High-level helpers for preparing and plotting trajectories.\n\n\n\nprepare_trajectory\nCompute optional smoothing passes for a sentiment signal.\n\n\nplot_trajectory\nRender a sentiment trajectory with optional overlays.\n\n\ntrajectory_to_dataframe\nConvert trajectory components to a tidy pandas DataFrame."
+  },
+  {
+    "objectID": "reference/prepare_trajectory.html",
+    "href": "reference/prepare_trajectory.html",
+    "title": "prepare_trajectory",
+    "section": "",
+    "text": "viz.prepare_trajectory(\n    values,\n    *,\n    rolling_window=None,\n    dct_transform=None,\n    normalize='range',\n)\nCompute optional smoothing passes for a sentiment signal.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nvalues\nSequence[float]\nSentiment scores ordered along the narrative timeline.\nrequired\n\n\nrolling_window\nint\nWindow length for :func:rolling_mean. When None, skip.\nNone\n\n\ndct_transform\nDCTTransform\nTransformer that applies DCT smoothing. When None, skip. If the transform already has scale_range=True or scale_values=True, the DCT output will not be normalized again to avoid double-scaling.\nNone\n\n\nnormalize\n('range', 'zscore')\nApply scaling to each returned series. \"range\" (default) rescales to [-1, 1] while \"zscore\" standardizes to zero mean and unit variance. Set to None to leave values untouched.\n\"range\"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nTrajectoryComponents\nContainer with raw values and any requested smoothing outputs.\n\n\n\n\n\n\nIf both normalize and dct_transform with internal scaling are provided, the DCT output is not normalized to prevent double-scaling. A warning is issued to alert the user.\n\n\n\n&gt;&gt;&gt; from moodswing import prepare_trajectory, DCTTransform\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Basic usage with defaults\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     rolling_window=50,\n...     dct_transform=DCTTransform(low_pass_size=10)\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Without normalization (preserve original scale)\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     dct_transform=DCTTransform(low_pass_size=5),\n...     normalize=None\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Z-score normalization for statistical comparison\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     rolling_window=30,\n...     normalize=\"zscore\"\n... )"
+  },
+  {
+    "objectID": "reference/prepare_trajectory.html#parameters",
+    "href": "reference/prepare_trajectory.html#parameters",
+    "title": "prepare_trajectory",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nvalues\nSequence[float]\nSentiment scores ordered along the narrative timeline.\nrequired\n\n\nrolling_window\nint\nWindow length for :func:rolling_mean. When None, skip.\nNone\n\n\ndct_transform\nDCTTransform\nTransformer that applies DCT smoothing. When None, skip. If the transform already has scale_range=True or scale_values=True, the DCT output will not be normalized again to avoid double-scaling.\nNone\n\n\nnormalize\n('range', 'zscore')\nApply scaling to each returned series. \"range\" (default) rescales to [-1, 1] while \"zscore\" standardizes to zero mean and unit variance. Set to None to leave values untouched.\n\"range\""
+  },
+  {
+    "objectID": "reference/prepare_trajectory.html#returns",
+    "href": "reference/prepare_trajectory.html#returns",
+    "title": "prepare_trajectory",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nTrajectoryComponents\nContainer with raw values and any requested smoothing outputs."
+  },
+  {
+    "objectID": "reference/prepare_trajectory.html#warnings",
+    "href": "reference/prepare_trajectory.html#warnings",
+    "title": "prepare_trajectory",
+    "section": "",
+    "text": "If both normalize and dct_transform with internal scaling are provided, the DCT output is not normalized to prevent double-scaling. A warning is issued to alert the user."
+  },
+  {
+    "objectID": "reference/prepare_trajectory.html#examples",
+    "href": "reference/prepare_trajectory.html#examples",
+    "title": "prepare_trajectory",
+    "section": "",
+    "text": "&gt;&gt;&gt; from moodswing import prepare_trajectory, DCTTransform\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Basic usage with defaults\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     rolling_window=50,\n...     dct_transform=DCTTransform(low_pass_size=10)\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Without normalization (preserve original scale)\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     dct_transform=DCTTransform(low_pass_size=5),\n...     normalize=None\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Z-score normalization for statistical comparison\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     rolling_window=30,\n...     normalize=\"zscore\"\n... )"
+  },
+  {
+    "objectID": "reference/load_sample_text.html",
+    "href": "reference/load_sample_text.html",
+    "title": "load_sample_text",
+    "section": "",
+    "text": "data.load_sample_text(doc_id=None, *, filename=_DEFAULT_SAMPLE)\nReturn a single (doc_id, text) pair from the bundled sample corpus.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ndoc_id\nstr\nSpecific document ID to retrieve. If None, returns the first available text.\nNone\n\n\nfilename\nstr\nName of the pickled corpus file to load.\n_DEFAULT_SAMPLE\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ntuple[str, str]\nDocument ID and text content.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf the requested doc_id is not found in the corpus.\n\n\n\nRuntimeError\nIf the corpus is empty.\n\n\n\n\n\n\n&gt;&gt;&gt; from moodswing.data import load_sample_text, list_sample_texts\n&gt;&gt;&gt; # See what's available\n&gt;&gt;&gt; print(list_sample_texts())\n&gt;&gt;&gt; # Load a specific text\n&gt;&gt;&gt; doc_id, text = load_sample_text(\"madame_bovary\")"
+  },
+  {
+    "objectID": "reference/load_sample_text.html#parameters",
+    "href": "reference/load_sample_text.html#parameters",
+    "title": "load_sample_text",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ndoc_id\nstr\nSpecific document ID to retrieve. If None, returns the first available text.\nNone\n\n\nfilename\nstr\nName of the pickled corpus file to load.\n_DEFAULT_SAMPLE"
+  },
+  {
+    "objectID": "reference/load_sample_text.html#returns",
+    "href": "reference/load_sample_text.html#returns",
+    "title": "load_sample_text",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\ntuple[str, str]\nDocument ID and text content."
+  },
+  {
+    "objectID": "reference/load_sample_text.html#raises",
+    "href": "reference/load_sample_text.html#raises",
+    "title": "load_sample_text",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nValueError\nIf the requested doc_id is not found in the corpus.\n\n\n\nRuntimeError\nIf the corpus is empty."
+  },
+  {
+    "objectID": "reference/load_sample_text.html#examples",
+    "href": "reference/load_sample_text.html#examples",
+    "title": "load_sample_text",
+    "section": "",
+    "text": "&gt;&gt;&gt; from moodswing.data import load_sample_text, list_sample_texts\n&gt;&gt;&gt; # See what's available\n&gt;&gt;&gt; print(list_sample_texts())\n&gt;&gt;&gt; # Load a specific text\n&gt;&gt;&gt; doc_id, text = load_sample_text(\"madame_bovary\")"
+  },
+  {
+    "objectID": "reference/trajectory_to_dataframe.html",
+    "href": "reference/trajectory_to_dataframe.html",
+    "title": "trajectory_to_dataframe",
+    "section": "",
+    "text": "viz.trajectory_to_dataframe(trajectory, normalize_position=True)\nConvert trajectory components to a tidy pandas DataFrame.\nThis helper creates a long-format DataFrame suitable for plotting with seaborn, plotly, or custom matplotlib code. Each row represents one position along one trajectory component.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntrajectory\nTrajectoryComponents\nThe trajectory data to convert.\nrequired\n\n\nnormalize_position\nbool\nIf True (default), position values are normalized to [0, 1] representing relative narrative time. If False, use integer indices (0, 1, 2, …).\nTrue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npandas.DataFrame\nTidy DataFrame with columns: - position : float or int, location along narrative - component : str, one of “raw”, “rolling”, or “dct” - value : float, sentiment score at this position\n\n\n\n\n\n\n&gt;&gt;&gt; from moodswing import prepare_trajectory, trajectory_to_dataframe\n&gt;&gt;&gt; import matplotlib.pyplot as plt\n&gt;&gt;&gt; import seaborn as sns\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Create trajectory\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     rolling_window=50,\n...     dct_transform=DCTTransform(low_pass_size=10)\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Convert to DataFrame\n&gt;&gt;&gt; df = trajectory_to_dataframe(trajectory)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Plot with seaborn\n&gt;&gt;&gt; sns.lineplot(data=df, x='position', y='value', hue='component')\n&gt;&gt;&gt; plt.show()\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Filter to specific components\n&gt;&gt;&gt; df_smooth = df[df['component'].isin(['rolling', 'dct'])]\n&gt;&gt;&gt; df_smooth.pivot(index='position', columns='component', values='value').plot()  #\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Export for further analysis\n&gt;&gt;&gt; df.to_csv('sentiment_trajectory.csv', index=False)"
+  },
+  {
+    "objectID": "reference/trajectory_to_dataframe.html#parameters",
+    "href": "reference/trajectory_to_dataframe.html#parameters",
+    "title": "trajectory_to_dataframe",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\ntrajectory\nTrajectoryComponents\nThe trajectory data to convert.\nrequired\n\n\nnormalize_position\nbool\nIf True (default), position values are normalized to [0, 1] representing relative narrative time. If False, use integer indices (0, 1, 2, …).\nTrue"
+  },
+  {
+    "objectID": "reference/trajectory_to_dataframe.html#returns",
+    "href": "reference/trajectory_to_dataframe.html#returns",
+    "title": "trajectory_to_dataframe",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\npandas.DataFrame\nTidy DataFrame with columns: - position : float or int, location along narrative - component : str, one of “raw”, “rolling”, or “dct” - value : float, sentiment score at this position"
+  },
+  {
+    "objectID": "reference/trajectory_to_dataframe.html#examples",
+    "href": "reference/trajectory_to_dataframe.html#examples",
+    "title": "trajectory_to_dataframe",
+    "section": "",
+    "text": "&gt;&gt;&gt; from moodswing import prepare_trajectory, trajectory_to_dataframe\n&gt;&gt;&gt; import matplotlib.pyplot as plt\n&gt;&gt;&gt; import seaborn as sns\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Create trajectory\n&gt;&gt;&gt; trajectory = prepare_trajectory(\n...     scores,\n...     rolling_window=50,\n...     dct_transform=DCTTransform(low_pass_size=10)\n... )\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Convert to DataFrame\n&gt;&gt;&gt; df = trajectory_to_dataframe(trajectory)\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Plot with seaborn\n&gt;&gt;&gt; sns.lineplot(data=df, x='position', y='value', hue='component')\n&gt;&gt;&gt; plt.show()\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Filter to specific components\n&gt;&gt;&gt; df_smooth = df[df['component'].isin(['rolling', 'dct'])]\n&gt;&gt;&gt; df_smooth.pivot(index='position', columns='component', values='value').plot()  #\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Export for further analysis\n&gt;&gt;&gt; df.to_csv('sentiment_trajectory.csv', index=False)"
+  },
+  {
+    "objectID": "reference/SpaCySentimentAnalyzer.html",
+    "href": "reference/SpaCySentimentAnalyzer.html",
+    "title": "SpaCySentimentAnalyzer",
+    "section": "",
+    "text": "sentiment.SpaCySentimentAnalyzer(\n    nlp=None,\n    model='en_core_web_sm',\n    positive_label='POSITIVE',\n    negative_label='NEGATIVE',\n    scorer=None,\n    strip_whitespace=True,\n    drop_empty=True,\n)\nDerive per-sentence sentiment values from a spaCy pipeline.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nnlp\nLanguage\nPre-loaded spaCy pipeline. If provided, the model parameter is ignored.\nNone\n\n\nmodel\nstr\nName of a spaCy model to load (e.g., \"en_core_web_sm\") or path to a local model directory. Defaults to \"en_core_web_sm\". Only used if nlp is not provided.\n'en_core_web_sm'\n\n\npositive_label\nstr\nLabel to use for positive sentiment when extracting from doc.cats. Defaults to \"POSITIVE\".\n'POSITIVE'\n\n\nnegative_label\nstr\nLabel to use for negative sentiment when extracting from doc.cats. Defaults to \"NEGATIVE\".\n'NEGATIVE'\n\n\nscorer\ncallable\nCustom scoring function that takes a spaCy Doc and returns a float sentiment score. If provided, overrides default sentiment extraction.\nNone\n\n\nstrip_whitespace\nbool\nRemove leading/trailing whitespace from sentences.\nTrue\n\n\ndrop_empty\nbool\nOmit empty sentences from processing.\nTrue\n\n\n\n\n\n\n&gt;&gt;&gt; # Use a model name\n&gt;&gt;&gt; analyzer = SpaCySentimentAnalyzer(model=\"en_core_web_sm\")\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Use a local model path\n&gt;&gt;&gt; analyzer = SpaCySentimentAnalyzer(model=\"/path/to/my_model\")\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Use a pre-loaded pipeline\n&gt;&gt;&gt; import spacy\n&gt;&gt;&gt; nlp = spacy.load(\"en_core_web_lg\")\n&gt;&gt;&gt; analyzer = SpaCySentimentAnalyzer(nlp=nlp)\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nsentence_scores\nScore a pre-tokenized list of sentences using spaCy.\n\n\ntext_scores\nSplit raw text into sentences and score each one.\n\n\n\n\n\nsentiment.SpaCySentimentAnalyzer.sentence_scores(sentences)\nScore a pre-tokenized list of sentences using spaCy.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences to feed through the spaCy pipeline.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nOne sentiment score per sentence.\n\n\n\n\n\n\n\nsentiment.SpaCySentimentAnalyzer.text_scores(text)\nSplit raw text into sentences and score each one.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nFull document or iterable of segments to analyze.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nSentiment score per detected sentence."
+  },
+  {
+    "objectID": "reference/SpaCySentimentAnalyzer.html#parameters",
+    "href": "reference/SpaCySentimentAnalyzer.html#parameters",
+    "title": "SpaCySentimentAnalyzer",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nnlp\nLanguage\nPre-loaded spaCy pipeline. If provided, the model parameter is ignored.\nNone\n\n\nmodel\nstr\nName of a spaCy model to load (e.g., \"en_core_web_sm\") or path to a local model directory. Defaults to \"en_core_web_sm\". Only used if nlp is not provided.\n'en_core_web_sm'\n\n\npositive_label\nstr\nLabel to use for positive sentiment when extracting from doc.cats. Defaults to \"POSITIVE\".\n'POSITIVE'\n\n\nnegative_label\nstr\nLabel to use for negative sentiment when extracting from doc.cats. Defaults to \"NEGATIVE\".\n'NEGATIVE'\n\n\nscorer\ncallable\nCustom scoring function that takes a spaCy Doc and returns a float sentiment score. If provided, overrides default sentiment extraction.\nNone\n\n\nstrip_whitespace\nbool\nRemove leading/trailing whitespace from sentences.\nTrue\n\n\ndrop_empty\nbool\nOmit empty sentences from processing.\nTrue"
+  },
+  {
+    "objectID": "reference/SpaCySentimentAnalyzer.html#examples",
+    "href": "reference/SpaCySentimentAnalyzer.html#examples",
+    "title": "SpaCySentimentAnalyzer",
+    "section": "",
+    "text": "&gt;&gt;&gt; # Use a model name\n&gt;&gt;&gt; analyzer = SpaCySentimentAnalyzer(model=\"en_core_web_sm\")\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Use a local model path\n&gt;&gt;&gt; analyzer = SpaCySentimentAnalyzer(model=\"/path/to/my_model\")\n&gt;&gt;&gt;\n&gt;&gt;&gt; # Use a pre-loaded pipeline\n&gt;&gt;&gt; import spacy\n&gt;&gt;&gt; nlp = spacy.load(\"en_core_web_lg\")\n&gt;&gt;&gt; analyzer = SpaCySentimentAnalyzer(nlp=nlp)"
+  },
+  {
+    "objectID": "reference/SpaCySentimentAnalyzer.html#methods",
+    "href": "reference/SpaCySentimentAnalyzer.html#methods",
+    "title": "SpaCySentimentAnalyzer",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nsentence_scores\nScore a pre-tokenized list of sentences using spaCy.\n\n\ntext_scores\nSplit raw text into sentences and score each one.\n\n\n\n\n\nsentiment.SpaCySentimentAnalyzer.sentence_scores(sentences)\nScore a pre-tokenized list of sentences using spaCy.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsentences\nSequence[str]\nSentences to feed through the spaCy pipeline.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nOne sentiment score per sentence.\n\n\n\n\n\n\n\nsentiment.SpaCySentimentAnalyzer.text_scores(text)\nSplit raw text into sentences and score each one.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ntext\nstr | Sequence[str]\nFull document or iterable of segments to analyze.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nSentiment score per detected sentence."
+  },
+  {
+    "objectID": "reference/rolling_mean.html",
+    "href": "reference/rolling_mean.html",
+    "title": "rolling_mean",
+    "section": "",
+    "text": "transforms.rolling_mean(values, window)\nCompute a rolling (moving) average over a sequence of values.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nvalues\nIterable[float]\nInput sequence to smooth.\nrequired\n\n\nwindow\nint\nNumber of points to average over. Must be positive.\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[float]\nSmoothed sequence with the same length as input.\n\n\n\n\n\n\nThis function uses mode=\"same\" convolution, which means:\n\nOutput has the same length as input\nEdge values (first and last window//2 points) are averaged over fewer points than the window size, using only available data\nThis prevents shrinkage but means edges are less smoothed\n\nFor example, with window=5, the first point averages over just itself plus the next 2 points, while interior points average over 5 points centered on the current position.\n\n\n\n&gt;&gt;&gt; scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n&gt;&gt;&gt; smoothed = rolling_mean(scores, window=3)\n&gt;&gt;&gt; # First value: avg of [1, 2] (only 2 points available)\n&gt;&gt;&gt; # Fifth value: avg of [4, 5, 6] (full 3-point window)"
+  },
+  {
+    "objectID": "reference/rolling_mean.html#parameters",
+    "href": "reference/rolling_mean.html#parameters",
+    "title": "rolling_mean",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nvalues\nIterable[float]\nInput sequence to smooth.\nrequired\n\n\nwindow\nint\nNumber of points to average over. Must be positive.\nrequired"
+  },
+  {
+    "objectID": "reference/rolling_mean.html#returns",
+    "href": "reference/rolling_mean.html#returns",
+    "title": "rolling_mean",
+    "section": "",
+    "text": "Name\nType\nDescription\n\n\n\n\n\nlist[float]\nSmoothed sequence with the same length as input."
+  },
+  {
+    "objectID": "reference/rolling_mean.html#notes",
+    "href": "reference/rolling_mean.html#notes",
+    "title": "rolling_mean",
+    "section": "",
+    "text": "This function uses mode=\"same\" convolution, which means:\n\nOutput has the same length as input\nEdge values (first and last window//2 points) are averaged over fewer points than the window size, using only available data\nThis prevents shrinkage but means edges are less smoothed\n\nFor example, with window=5, the first point averages over just itself plus the next 2 points, while interior points average over 5 points centered on the current position."
+  },
+  {
+    "objectID": "reference/rolling_mean.html#examples",
+    "href": "reference/rolling_mean.html#examples",
+    "title": "rolling_mean",
+    "section": "",
+    "text": "&gt;&gt;&gt; scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n&gt;&gt;&gt; smoothed = rolling_mean(scores, window=3)\n&gt;&gt;&gt; # First value: avg of [1, 2] (only 2 points available)\n&gt;&gt;&gt; # Fifth value: avg of [4, 5, 6] (full 3-point window)"
+  },
+  {
+    "objectID": "examples-gallery.html",
+    "href": "examples-gallery.html",
+    "title": "Examples Gallery",
+    "section": "",
+    "text": "This gallery showcases complete workflows for common sentiment analysis tasks. Each example is self-contained and ready to adapt for your own projects."
+  },
+  {
+    "objectID": "examples-gallery.html#setup",
+    "href": "examples-gallery.html#setup",
+    "title": "Examples Gallery",
+    "section": "Setup",
+    "text": "Setup\n\nfrom moodswing import (\n    DictionarySentimentAnalyzer,\n    Sentencizer,\n    DCTTransform,\n    prepare_trajectory,\n    plot_trajectory,\n    trajectory_to_dataframe,\n)\nfrom moodswing.data import load_sample_text\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd"
+  },
+  {
+    "objectID": "examples-gallery.html#example-1-comparing-multiple-novels",
+    "href": "examples-gallery.html#example-1-comparing-multiple-novels",
+    "title": "Examples Gallery",
+    "section": "Example 1: Comparing multiple novels",
+    "text": "Example 1: Comparing multiple novels\nAnalyze and compare the emotional arcs of several novels side-by-side:\n\n# Setup\nsentencizer = Sentencizer()\nanalyzer = DictionarySentimentAnalyzer()\n\n# Select novels to compare\nnovels = [\n    \"portrait_artist\",\n    \"madame_bovary\", \n    \"ragged_dick\"\n]\n\n# Create subplots\nfig, axes = plt.subplots(1, 3, figsize=(15, 4), dpi=150, sharey=True)\n\nfor ax, novel_id in zip(axes, novels):\n    try:\n        # Load and process\n        doc_id, text = load_sample_text(novel_id)\n        sentences = sentencizer.split(text)\n        scores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\n        \n        # Create trajectory\n        trajectory = prepare_trajectory(\n            scores,\n            rolling_window=int(len(scores) * 0.05),\n            dct_transform=DCTTransform(low_pass_size=5, output_length=200, scale_range=True)\n        )\n        \n        # Plot only DCT\n        plot_trajectory(trajectory, components=['dct'], title=doc_id, ax=ax)\n        ax.set_xlabel('Narrative Position')\n        if ax == axes[0]:\n            ax.set_ylabel('Sentiment')\n    except Exception as e:\n        print(f\"Could not process {novel_id}: {e}\")\n\nplt.tight_layout()\nplt.show()\n\n\n\n\nSide-by-side comparison of three novels"
+  },
+  {
+    "objectID": "examples-gallery.html#example-2-chapter-by-chapter-analysis",
+    "href": "examples-gallery.html#example-2-chapter-by-chapter-analysis",
+    "title": "Examples Gallery",
+    "section": "Example 2: Chapter-by-chapter analysis",
+    "text": "Example 2: Chapter-by-chapter analysis\nAnalyze a novel broken into chapters to see emotional patterns at the chapter level:\n\n# Load a novel\ndoc_id, text = load_sample_text(\"portrait_artist\")\n\n# Split into chapters (using Chapter markers as delimiters)\nimport re\nchapters = re.split(r'\\s*Chapter\\s+[IVXLC]+\\s*', text)\nchapters = [ch.strip() for ch in chapters if ch.strip()]\n\nprint(f\"Found {len(chapters)} chapters in {doc_id}\")\n\n# Score each chapter\nchapter_scores = []\nfor i, chapter in enumerate(chapters, 1):\n    sents = sentencizer.split(chapter)\n    scores = analyzer.sentence_scores(sents, method=\"syuzhet\")\n    avg_score = np.mean(scores) if scores else 0\n    chapter_scores.append({\n        'chapter': i,\n        'mean_sentiment': avg_score,\n        'sentences': len(sents),\n        'std_sentiment': np.std(scores) if scores else 0\n    })\n\n# Create DataFrame\nchapters_df = pd.DataFrame(chapter_scores)\nprint(chapters_df.head())\n\nFound 5 chapters in portrait_artist\n   chapter  mean_sentiment  sentences  std_sentiment\n0        1       -0.033272       1366       0.812152\n1        2        0.021910        801       1.024633\n2        3       -0.419166        887       1.490579\n3        4        0.087970        399       1.343594\n4        5        0.093825       1919       0.887800\n\n\n\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 4), dpi=150)\n\n# Plot 1: Mean sentiment by chapter\nax1.bar(chapters_df['chapter'], chapters_df['mean_sentiment'], \n        color='steelblue', alpha=0.7, edgecolor='black')\nax1.axhline(0, color='black', linewidth=0.5, linestyle='--')\nax1.set_xlabel('Chapter Number', fontsize=11)\nax1.set_ylabel('Mean Sentiment', fontsize=11)\nax1.set_title('Average Sentiment by Chapter', fontsize=12, fontweight='bold')\nax1.grid(True, alpha=0.2, axis='y')\n\n# Plot 2: Sentiment variability\nax2.bar(chapters_df['chapter'], chapters_df['std_sentiment'], \n        color='coral', alpha=0.7, edgecolor='black')\nax2.set_xlabel('Chapter Number', fontsize=11)\nax2.set_ylabel('Standard Deviation', fontsize=11)\nax2.set_title('Emotional Variability by Chapter', fontsize=12, fontweight='bold')\nax2.grid(True, alpha=0.2, axis='y')\n\nplt.tight_layout()\nplt.show()\n\n\n\n\nChapter-level sentiment analysis"
+  },
+  {
+    "objectID": "examples-gallery.html#example-3-multi-dimensional-emotion-tracking",
+    "href": "examples-gallery.html#example-3-multi-dimensional-emotion-tracking",
+    "title": "Examples Gallery",
+    "section": "Example 3: Multi-dimensional emotion tracking",
+    "text": "Example 3: Multi-dimensional emotion tracking\nTrack and visualize multiple NRC emotions simultaneously:\n\n# Load and analyze\ndoc_id, text = load_sample_text(\"ragged_dick\")\nsentences = sentencizer.split(text)\n\n# Get NRC emotions\nemotions = analyzer.nrc_emotions(sentences)\nemotions_df = pd.DataFrame(emotions)\n\n# Sample every Nth sentence for cleaner visualization\nsample_rate = max(1, len(emotions_df) // 100)  # ~100 points\nemotions_sampled = emotions_df.iloc[::sample_rate]\n\n# Select key emotions for heatmap\nemotion_cols = ['joy', 'fear', 'anger', 'sadness', 'trust', 'anticipation', 'surprise', 'disgust']\n\n# Create heatmap\nfig, ax = plt.subplots(figsize=(12, 6), dpi=150)\nim = ax.imshow(emotions_sampled[emotion_cols].T, aspect='auto', cmap='YlOrRd', interpolation='nearest')\n\n# Customize\nax.set_yticks(range(len(emotion_cols)))\nax.set_yticklabels([e.title() for e in emotion_cols], fontsize=11)\nax.set_xlabel('Narrative Position (sampled)', fontsize=11)\nax.set_title(f'{doc_id}: Emotional Heatmap', fontsize=13, fontweight='bold')\n\n# Add colorbar\ncbar = plt.colorbar(im, ax=ax)\ncbar.set_label('Emotion Intensity', rotation=270, labelpad=20, fontsize=11)\n\nplt.tight_layout()\nplt.show()\n\n\n\n\nHeatmap of emotions across narrative"
+  },
+  {
+    "objectID": "examples-gallery.html#example-4-comparing-sentiment-methods",
+    "href": "examples-gallery.html#example-4-comparing-sentiment-methods",
+    "title": "Examples Gallery",
+    "section": "Example 4: Comparing sentiment methods",
+    "text": "Example 4: Comparing sentiment methods\nCompare how different lexicons score the same text:\n\ndoc_id, text = load_sample_text(\"madame_bovary\")\nsentences = sentencizer.split(text)\n\n# Score with all four lexicons\nmethods = ['syuzhet', 'afinn', 'bing', 'nrc']\ntrajectories = {}\n\nfor method in methods:\n    scores = analyzer.sentence_scores(sentences, method=method)\n    traj = prepare_trajectory(\n        scores,\n        dct_transform=DCTTransform(low_pass_size=5, output_length=200, scale_range=True)\n    )\n    trajectories[method] = traj\n\n# Plot comparison\nfig, axes = plt.subplots(2, 2, figsize=(14, 8), dpi=150)\naxes = axes.flatten()\n\ncolors = ['crimson', 'steelblue', 'green', 'orange']\n\nfor ax, method, color in zip(axes, methods, colors):\n    traj = trajectories[method]\n    x = np.linspace(0, 1, len(traj.dct))\n    ax.plot(x, traj.dct, color=color, linewidth=2.5, label=method.upper())\n    ax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\n    ax.set_title(f'{method.upper()} Lexicon', fontsize=12, fontweight='bold')\n    ax.set_xlabel('Narrative Position', fontsize=10)\n    ax.set_ylabel('Sentiment', fontsize=10)\n    ax.grid(True, alpha=0.2)\n    ax.set_ylim(-1.1, 1.1)\n\nfig.suptitle(f'{doc_id}: Lexicon Comparison', fontsize=14, fontweight='bold')\nplt.tight_layout()\nplt.show()\n\n\n\n\nComparing four lexicons on the same text"
+  },
+  {
+    "objectID": "examples-gallery.html#example-5-custom-color-schemes-for-themes",
+    "href": "examples-gallery.html#example-5-custom-color-schemes-for-themes",
+    "title": "Examples Gallery",
+    "section": "Example 5: Custom color schemes for themes",
+    "text": "Example 5: Custom color schemes for themes\nCreate thematic color palettes for different genres or moods:\n\n# Define color themes\nthemes = {\n    'gothic': {'raw': '#2D2D2D', 'rolling': '#8B4513', 'dct': '#8B0000'},\n    'romantic': {'raw': '#FFE4E1', 'rolling': '#FF69B4', 'dct': '#DC143C'},\n    'modern': {'raw': '#E0E0E0', 'rolling': '#4A90E2', 'dct': '#50C878'},\n}\n\n# Load text\ndoc_id, text = load_sample_text(\"silas_lapham\")\nsentences = sentencizer.split(text)\nscores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\ntrajectory = prepare_trajectory(\n    scores,\n    rolling_window=int(len(scores) * 0.05),\n    dct_transform=DCTTransform(low_pass_size=5, output_length=200, scale_range=True)\n)\n\n# Plot with each theme\nfig, axes = plt.subplots(1, 3, figsize=(15, 4), dpi=150)\n\nfor ax, (theme_name, colors) in zip(axes, themes.items()):\n    plot_trajectory(trajectory, colors=colors, title=f'{theme_name.title()} Theme', ax=ax)\n    ax.set_facecolor('#FAFAFA')\n\nplt.tight_layout()\nplt.show()\n\n\n\n\nThematic color schemes"
+  },
+  {
+    "objectID": "examples-gallery.html#example-6-export-data-for-external-tools",
+    "href": "examples-gallery.html#example-6-export-data-for-external-tools",
+    "title": "Examples Gallery",
+    "section": "Example 6: Export data for external tools",
+    "text": "Example 6: Export data for external tools\nPrepare sentiment data for analysis in R, Excel, or other tools:\n\n# Full analysis pipeline with data export\ndoc_id, text = load_sample_text(\"madame_bovary\")\nsentences = sentencizer.split(text)\n\n# Get multiple types of scores\nsyuzhet_scores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\nemotions = analyzer.nrc_emotions(sentences)\n\n# Create comprehensive DataFrame\nanalysis_df = pd.DataFrame({\n    'sentence_num': range(1, len(sentences) + 1),\n    'sentence_text': sentences,\n    'syuzhet_score': syuzhet_scores,\n})\n\n# Add NRC emotions\nemotions_df = pd.DataFrame(emotions)\nanalysis_df = pd.concat([analysis_df, emotions_df], axis=1)\n\n# Add trajectory data (aligned to sentence positions)\ntrajectory = prepare_trajectory(\n    syuzhet_scores,\n    rolling_window=int(len(syuzhet_scores) * 0.05),\n    dct_transform=DCTTransform(low_pass_size=5, output_length=len(sentences), scale_range=True)\n)\n\nanalysis_df['raw_normalized'] = trajectory.raw\nanalysis_df['rolling_smooth'] = trajectory.rolling[:len(sentences)]\nanalysis_df['dct_smooth'] = trajectory.dct[:len(sentences)]\n\n# Display sample\nprint(analysis_df.head())\n\n   sentence_num                                      sentence_text  \\\n0             1  Part I Chapter One We were in class when the h...   \n1             2  Those who had been asleep woke up, and every o...   \n2             3     The head-master made a sign to us to sit down.   \n3             4  Then, turning to the class-master, he said to ...   \n4             5  If his work and conduct are satisfactory, he w...   \n\n   syuzhet_score  anger  anticipation  disgust  fear  joy  negative  positive  \\\n0           1.20    0.0           0.0      0.0   0.0  0.0       1.0       1.0   \n1           0.25    0.0           0.0      0.0   0.0  0.0       0.0       0.0   \n2           0.00    0.0           0.0      0.0   0.0  0.0       0.0       0.0   \n3           1.50    0.0           0.0      0.0   0.0  0.0       0.0       1.0   \n4           1.05    0.0           0.0      0.0   0.0  0.0       0.0       0.0   \n\n   sadness  surprise  trust  raw_normalized  rolling_smooth  dct_smooth  \n0      0.0       0.0    4.0       -0.068702        0.481874    1.000000  \n1      0.0       1.0    0.0       -0.213740        0.449076    0.999999  \n2      0.0       0.0    0.0       -0.251908        0.462119    0.999998  \n3      0.0       0.0    1.0       -0.022901        0.463712    0.999996  \n4      0.0       0.0    0.0       -0.091603        0.459667    0.999994  \n\n\n\n# Export\nanalysis_df.to_csv(f'{doc_id}_full_analysis.csv', index=False)\nanalysis_df.to_excel(f'{doc_id}_full_analysis.xlsx', index=False)\n\nprint(f\"\\\\nExported {len(analysis_df)} sentences with {len(analysis_df.columns)} features\")\nprint(\"Files created: CSV and Excel formats\")"
+  },
+  {
+    "objectID": "examples-gallery.html#example-8-progressive-trajectory-reveal",
+    "href": "examples-gallery.html#example-8-progressive-trajectory-reveal",
+    "title": "Examples Gallery",
+    "section": "Example 8: Progressive trajectory reveal",
+    "text": "Example 8: Progressive trajectory reveal\nVisualize how a narrative arc unfolds over time using a grid of progressive snapshots:\n\n# Create progressive reveal visualization\ndoc_id, text = load_sample_text(\"portrait_artist\")\nsentences = sentencizer.split(text)\nscores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\n\n# Create full trajectory\nfull_trajectory = prepare_trajectory(\n    scores,\n    dct_transform=DCTTransform(low_pass_size=5, output_length=200, scale_range=True)\n)\n\npositions = np.linspace(0, 1, len(full_trajectory.dct))\n\n# Create grid of 10 frames (2 rows x 5 columns)\nfig, axes = plt.subplots(2, 5, figsize=(16, 6), dpi=150)\naxes = axes.flatten()\n\nn_frames = 10\nfor frame_num, ax in enumerate(axes, 1):\n    # Show first N% of trajectory\n    cutoff = int(len(positions) * (frame_num / n_frames))\n    \n    # Plot progressive portion\n    ax.plot(positions[:cutoff], full_trajectory.dct[:cutoff], \n            color='crimson', linewidth=2)\n    ax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\n    ax.set_xlim(0, 1)\n    ax.set_ylim(-1.1, 1.1)\n    \n    # Minimize labels for grid view\n    ax.set_title(f'{frame_num*10}%', fontsize=10, fontweight='bold')\n    ax.tick_params(labelsize=7)\n    ax.grid(True, alpha=0.2)\n    \n    # Only show axis labels on outer edges\n    if frame_num &gt; 5:\n        ax.set_xlabel('Position', fontsize=8)\n    if frame_num in [1, 6]:\n        ax.set_ylabel('Sentiment', fontsize=8)\n\nfig.suptitle(f'{doc_id}: Progressive Arc Development', fontsize=14, fontweight='bold')\nplt.tight_layout()\nplt.show()\n\n\n\n\nProgressive reveal showing narrative arc development from 10% to 100%\n\n\n\n\nThis “storyboard” view shows how the emotional trajectory emerges gradually—useful for presentations or for understanding when key narrative shifts occur."
+  },
+  {
+    "objectID": "examples-gallery.html#next-steps",
+    "href": "examples-gallery.html#next-steps",
+    "title": "Examples Gallery",
+    "section": "Next steps",
+    "text": "Next steps\n\nAdapt these examples for your own texts\nCombine techniques for richer analysis\nSee Visualization Guide for more styling options\nRead Technical Notes for implementation details"
+  },
+  {
+    "objectID": "sentiment-lexicons.html",
+    "href": "sentiment-lexicons.html",
+    "title": "Using sentiment lexicons",
+    "section": "",
+    "text": "Dictionary-based sentiment analysis uses lexicons—lists of words paired with numeric scores that indicate whether each word feels positive, negative, or neutral. This approach is fast, transparent, and widely used in literary analysis and digital humanities research."
+  },
+  {
+    "objectID": "sentiment-lexicons.html#what-is-a-sentiment-lexicon",
+    "href": "sentiment-lexicons.html#what-is-a-sentiment-lexicon",
+    "title": "Using sentiment lexicons",
+    "section": "What is a sentiment lexicon?",
+    "text": "What is a sentiment lexicon?\nA sentiment lexicon (also called a sentiment dictionary) is essentially a lookup table. Each word has a score:\n\nPositive values indicate pleasant, happy, or optimistic words\nNegative values indicate unpleasant, sad, or pessimistic words\n\nZero indicates neutral words (or words not in the dictionary)\n\nFor example, a lexicon might assign:\n\n\n\nWord\nScore\n\n\n\n\njoy\n+0.8\n\n\nhappy\n+0.7\n\n\nsad\n-0.6\n\n\nterrible\n-0.9\n\n\nthe\n0.0\n\n\n\nWhen analyzing a sentence like “I feel happy today”, the analyzer tokenizes it into words, looks up each word’s score, and sums them. The moodswing package includes four widely-used lexicons from the R syuzhet package, each with different strengths."
+  },
+  {
+    "objectID": "sentiment-lexicons.html#setup",
+    "href": "sentiment-lexicons.html#setup",
+    "title": "Using sentiment lexicons",
+    "section": "Setup",
+    "text": "Setup\nLet’s import the tools we’ll use throughout this guide:\n\nfrom moodswing import (\n    DictionarySentimentAnalyzer,\n    Sentencizer,\n    DCTTransform,\n    load_sample_text,\n    prepare_trajectory,\n    trajectory_to_dataframe\n    )\nfrom moodswing.lexicons import LexiconLoader\nimport pandas as pd\n\n\n# Create the analyzer that will score our sentences\nanalyzer = DictionarySentimentAnalyzer()\nsentencizer = Sentencizer()"
+  },
+  {
+    "objectID": "sentiment-lexicons.html#the-four-included-lexicons",
+    "href": "sentiment-lexicons.html#the-four-included-lexicons",
+    "title": "Using sentiment lexicons",
+    "section": "The four included lexicons",
+    "text": "The four included lexicons\n\nSyuzhet\nThe Syuzhet lexicon was created specifically for narrative analysis by Matthew Jockers. It assigns sentiment values optimized for tracking emotional arcs in fiction.\n\n# Load the Syuzhet lexicon to examine it\nloader = LexiconLoader()\nsyuzhet_lex = loader.load(\"syuzhet\")\n\n# Show some example entries\nsample_words = [\"love\", \"hate\", \"joy\", \"fear\", \"hope\", \"despair\", \"gentle\", \"cruel\"]\nsyuzhet_samples = {word: syuzhet_lex.score(word) for word in sample_words}\npd.DataFrame(syuzhet_samples.items(), columns=[\"Word\", \"Score\"])\n\n\n\n\n\n\n\n\nWord\nScore\n\n\n\n\n0\nlove\n0.75\n\n\n1\nhate\n-0.75\n\n\n2\njoy\n0.75\n\n\n3\nfear\n-0.75\n\n\n4\nhope\n0.50\n\n\n5\ndespair\n-0.75\n\n\n6\ngentle\n1.00\n\n\n7\ncruel\n-1.00\n\n\n\n\n\n\n\nWhen to use Syuzhet: Best for analyzing novels, short stories, and other narrative texts. It’s the default method and was designed specifically for plotting emotional trajectories.\n\n\nAFINN\nThe AFINN lexicon, created by Finn Årup Nielsen, rates words on an integer scale from -5 (most negative) to +5 (most positive). Originally designed for social media text, it includes informal language and slang.\n\n# Load and examine AFINN\nafinn_lex = loader.load(\"afinn\")\n\n# Show some example entries\nafinn_samples = {word: afinn_lex.score(word) for word in sample_words}\npd.DataFrame(afinn_samples.items(), columns=[\"Word\", \"Score\"])\n\n\n\n\n\n\n\n\nWord\nScore\n\n\n\n\n0\nlove\n3.0\n\n\n1\nhate\n-3.0\n\n\n2\njoy\n3.0\n\n\n3\nfear\n-2.0\n\n\n4\nhope\n2.0\n\n\n5\ndespair\n-3.0\n\n\n6\ngentle\n0.0\n\n\n7\ncruel\n-3.0\n\n\n\n\n\n\n\nWhen to use AFINN: Good for informal texts, social media content, or when you need a simple integer scale. The -5 to +5 range makes scores easy to interpret.\n\n\nBing\nThe Bing lexicon (from Bing Liu’s work at UIC) is binary: words are either positive (+1) or negative (-1). It contains no neutral words—every entry is clearly polarized.\n\n# Load and examine Bing\nbing_lex = loader.load(\"bing\")\n\n# Show some example entries\nbing_samples = {word: bing_lex.score(word) for word in sample_words}\npd.DataFrame(bing_samples.items(), columns=[\"Word\", \"Score\"])\n\n\n\n\n\n\n\n\nWord\nScore\n\n\n\n\n0\nlove\n1.0\n\n\n1\nhate\n-1.0\n\n\n2\njoy\n1.0\n\n\n3\nfear\n-1.0\n\n\n4\nhope\n0.0\n\n\n5\ndespair\n-1.0\n\n\n6\ngentle\n1.0\n\n\n7\ncruel\n-1.0\n\n\n\n\n\n\n\nWhen to use Bing: Use when you want clear-cut positive/negative categorization without nuanced gradations. Good for opinion mining and when subtlety isn’t critical.\n\n\nNRC\nThe NRC Emotion Lexicon (from Saif Mohammad and Peter Turney) is unique: it maps words to multiple emotions (anger, fear, joy, sadness, etc.) plus overall positive/negative sentiment. This allows richer emotional analysis beyond simple valence.\n\n# Load NRC as an emotion lexicon\nnrc_lex = loader.load(\"nrc\")\n\n# NRC provides categorical emotions, not just positive/negative\n# Let's look at the emotions for a single word\nprint(\"Emotions associated with 'love':\")\nprint(nrc_lex.emotions_for(\"love\"))\n\nEmotions associated with 'love':\n{'positive': 1.0, 'joy': 1.0}\n\n\n\n# Show available emotion categories\nprint(\"\\nAll NRC emotion categories:\")\nprint(nrc_lex.categories)\n\n\nAll NRC emotion categories:\n('anger', 'anticipation', 'disgust', 'fear', 'joy', 'negative', 'positive', 'sadness', 'surprise', 'trust')\n\n\nWhen to use NRC: Use when you want to track multiple emotional dimensions simultaneously (fear vs. joy, anger vs. trust). Ideal for research questions about specific emotions rather than just overall positivity/negativity.\nMultilingual support: Unlike the other lexicons, NRC is available in multiple languages. You can specify the language parameter when loading or scoring:\n\n# Load NRC in French\nnrc_french = loader.load(\"nrc\", language=\"french\")\n\n# Check a French word\nprint(\"Emotions for 'amour' (love in French):\")\nprint(nrc_french.emotions_for(\"amour\"))\n\nEmotions for 'amour' (love in French):\n{'positive': 1.0, 'anticipation': 1.0, 'joy': 1.0, 'trust': 1.0}"
+  },
+  {
+    "objectID": "sentiment-lexicons.html#comparison-with-r",
+    "href": "sentiment-lexicons.html#comparison-with-r",
+    "title": "Using sentiment lexicons",
+    "section": "Comparison with R",
+    "text": "Comparison with R\nWhile this package is based on Jockers’ R package, note that even if you use the same lexicon, the outputs will not be precisely the same. This is because sentence splitting and tokenization do not follow the exact same procedures, and the outputs can therefore be different. That said, even with those caveats, results are remarkably similar when the same transformation formulae are used. Consider the example of Madame Bovary plotted from R and Python outputs.\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# R syuzhet output (DCT transform with 100 points)\ntime = np.linspace(0, 1, 100)\nr_dct = [1.000, 0.997, 0.992, 0.985, 0.975, 0.963, 0.948, 0.932, 0.913, 0.893, \n         0.870, 0.847, 0.821, 0.795, 0.768, 0.740, 0.711, 0.682, 0.653, 0.624, \n         0.595, 0.567, 0.539, 0.512, 0.486, 0.461, 0.438, 0.416, 0.395, 0.376, \n         0.359, 0.344, 0.331, 0.319, 0.310, 0.302, 0.296, 0.292, 0.290, 0.289, \n         0.289, 0.291, 0.295, 0.299, 0.304, 0.310, 0.316, 0.323, 0.329, 0.336, \n         0.342, 0.347, 0.351, 0.355, 0.357, 0.357, 0.356, 0.353, 0.348, 0.340, \n         0.330, 0.318, 0.303, 0.286, 0.266, 0.243, 0.217, 0.189, 0.158, 0.124, \n         0.088, 0.050, 0.009, -0.033, -0.078, -0.124, -0.171, -0.220, -0.269, -0.319, \n         -0.370, -0.420, -0.470, -0.520, -0.568, -0.615, -0.661, -0.705, -0.747, -0.787, \n         -0.823, -0.857, -0.888, -0.915, -0.939, -0.959, -0.975, -0.988, -0.996, -1.000]\n\n# Python moodswing output\ndoc_id, text = load_sample_text(\"madame_bovary\")\nsentences = sentencizer.split(text)\nscores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\n\ntrajectory = prepare_trajectory(\n    scores,\n    dct_transform=DCTTransform(\n        low_pass_size=5,\n        output_length=100,\n        scale_range=True\n    ),\n)\n\npy_dct = trajectory.dct\n\n\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 4), dpi=150, sharey=True)\n\n# R output\nax1.plot(time, r_dct, color='#E63946', linewidth=2.5)\nax1.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\nax1.set_xlabel('Narrative Position', fontsize=11)\nax1.set_ylabel('Sentiment', fontsize=11)\nax1.set_title('R syuzhet Package', fontsize=12, fontweight='bold')\nax1.grid(True, alpha=0.2)\n\n# Python output\nax2.plot(time, py_dct, color='#457B9D', linewidth=2.5)\nax2.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\nax2.set_xlabel('Narrative Position', fontsize=11)\nax2.set_title('Python moodswing Package', fontsize=12, fontweight='bold')\nax2.grid(True, alpha=0.2)\n\nfig.suptitle('Madame Bovary: R vs Python DCT Trajectories', fontsize=14, fontweight='bold')\nplt.tight_layout()\nplt.show()\n\n\n\n\nR vs Python: Nearly identical trajectories despite different text preprocessing\n\n\n\n\nThe overall shapes are nearly identical—both show the classic descent from positive to negative—but subtle differences may arise from how each implementation tokenizes words and splits sentences. For research reproducibility, document which implementation you use.\n\n\n\n\n\n\nCross-platform consistency\n\n\n\nIf you need identical results between R and Python for a specific project, consider:\n\nPre-tokenizing text in a standardized way before analysis\nUsing the same sentence splitting rules (e.g., export NLTK’s Punkt output)\nExplicitly documenting your preprocessing pipeline\n\nFor most narrative analysis purposes, these minor differences don’t affect interpretation of the overall emotional arc."
+  },
+  {
+    "objectID": "sentiment-lexicons.html#comparing-lexicons-on-the-same-text",
+    "href": "sentiment-lexicons.html#comparing-lexicons-on-the-same-text",
+    "title": "Using sentiment lexicons",
+    "section": "Comparing lexicons on the same text",
+    "text": "Comparing lexicons on the same text\nLet’s see how different lexicons score the same passage:\n\nsample_passage = \"\"\"\nThe day began with brilliant sunshine and cheerful birdsong. \nChildren laughed as they played in the park. But storm clouds gathered, \nand by evening a terrible darkness had fallen. Fear gripped the town \nas thunder crashed overhead.\n\"\"\"\n\n# Split into sentences\nsentences = sentencizer.split(sample_passage)\nprint(f\"Number of sentences: {len(sentences)}\\n\")\n\n# Score with each lexicon\nmethods = [\"syuzhet\", \"afinn\", \"bing\"]\nresults = {}\n\nfor method in methods:\n    scores = analyzer.sentence_scores(sentences, method=method)\n    results[method] = scores\n    print(f\"{method.upper()} scores: {scores}\")\n    print(f\"  Total: {sum(scores):.2f}\\n\")\n\nNumber of sentences: 4\n\nSYUZHET scores: [2.25, 0.8, -2.25, -1.35]\n  Total: -0.55\n\nAFINN scores: [8.0, 1.0, -6.0, -2.0]\n  Total: 1.00\n\nBING scores: [2.0, 0.0, -3.0, -2.0]\n  Total: -3.00\n\n\n\nNotice how the lexicons produce different scores but similar patterns—all recognize the shift from positive (sunshine, cheerful) to negative (terrible, fear) sentiment."
+  },
+  {
+    "objectID": "sentiment-lexicons.html#working-with-nrc-emotions",
+    "href": "sentiment-lexicons.html#working-with-nrc-emotions",
+    "title": "Using sentiment lexicons",
+    "section": "Working with NRC emotions",
+    "text": "Working with NRC emotions\nThe NRC lexicon offers a different approach: instead of a single sentiment score, you can track multiple emotional dimensions:\n\n# Use the nrc_emotions method to get categorical breakdowns\nemotion_results = analyzer.nrc_emotions(sentences)\n\n# Convert to DataFrame for easy viewing\nemotions_df = pd.DataFrame(emotion_results)\nemotions_df.index = [f\"Sentence {i+1}\" for i in range(len(sentences))]\nemotions_df\n\n\n\n\n\n\n\n\nanger\nanticipation\ndisgust\nfear\njoy\nnegative\npositive\nsadness\nsurprise\ntrust\n\n\n\n\nSentence 1\n0.0\n1.0\n0.0\n0.0\n3.0\n0.0\n3.0\n0.0\n1.0\n1.0\n\n\nSentence 2\n0.0\n0.0\n0.0\n0.0\n0.0\n0.0\n0.0\n0.0\n0.0\n0.0\n\n\nSentence 3\n3.0\n0.0\n1.0\n2.0\n0.0\n3.0\n0.0\n2.0\n0.0\n0.0\n\n\nSentence 4\n1.0\n0.0\n0.0\n1.0\n0.0\n1.0\n0.0\n0.0\n0.0\n0.0\n\n\n\n\n\n\n\n\n# Visualize the emotional profile of the entire passage\ntotal_emotions = emotions_df.sum()\ntotal_emotions.sort_values(ascending=False).head(8)\n\nanger           4.0\nnegative        4.0\njoy             3.0\nfear            3.0\npositive        3.0\nsadness         2.0\nanticipation    1.0\ndisgust         1.0\ndtype: float64\n\n\nThis reveals that the passage triggers fear, negative sentiment, and sadness most strongly, with some positive and joy from the opening. This nuanced view can help identify which specific emotions drive a text’s overall trajectory.\n\nPlotting emotion trajectories\nYou can track how specific emotions evolve across a narrative by plotting their trajectories over time:\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Get emotions for entire novel\ndoc_id_emo, text_emo = load_sample_text(\"portrait_artist\")\nsentences_emo = sentencizer.split(text_emo)\nemotions_all = analyzer.nrc_emotions(sentences_emo)\n\n# Convert to DataFrame\nemotions_df_all = pd.DataFrame(emotions_all)\n\n# Plot fear and joy trajectories\nfig, ax = plt.subplots(figsize=(10, 4), dpi=150)\npositions = np.linspace(0, 1, len(emotions_df_all))\n\nax.plot(positions, emotions_df_all['fear'], label='Fear', color='purple', linewidth=2, alpha=0.7)\nax.plot(positions, emotions_df_all['joy'], label='Joy', color='gold', linewidth=2, alpha=0.7)\nax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)\nax.set_xlabel('Narrative Position', fontsize=11)\nax.set_ylabel('Emotion Intensity', fontsize=11)\nax.set_title(f'{doc_id_emo}: Fear vs. Joy Trajectories', fontsize=13)\nax.legend(frameon=False)\nax.grid(True, alpha=0.2)\nplt.tight_layout()\nplt.show()\n\n\n\n\nTrajectories of fear and joy emotions across the narrative\n\n\n\n\nYou can smooth these emotion trajectories using prepare_trajectory() and trajectory_to_dataframe() just like sentiment scores, enabling sophisticated multi-dimensional emotional analysis."
+  },
+  {
+    "objectID": "sentiment-lexicons.html#analyzing-mixed-messages",
+    "href": "sentiment-lexicons.html#analyzing-mixed-messages",
+    "title": "Using sentiment lexicons",
+    "section": "Analyzing mixed messages",
+    "text": "Analyzing mixed messages\nSometimes texts send conflicting emotional signals—mixing positive and negative words in ways that create ambiguity or irony. The mixed_messages() method uses Shannon entropy to quantify this emotional complexity:\n\n# Compare a straightforward negative text vs. a mixed one\nstraightforward = \"The terrible, awful, horrible disaster was devastating and tragic.\"\nmixed = \"The celebration was bittersweet; joy mixed with sorrow as we remembered those absent.\"\n\nprint(\"Straightforward negative text:\")\nresult_fwd = analyzer.mixed_messages(straightforward, method=\"syuzhet\")\nprint(f\"  Entropy: {result_fwd.entropy:.3f}\")\nprint(f\"  Normalized entropy: {result_fwd.normalized_entropy:.3f}\")\n\nprint(\"\\nMixed emotional signals:\")\nresult_mix = analyzer.mixed_messages(mixed, method=\"syuzhet\")\nprint(f\"  Entropy: {result_mix.entropy:.3f}\")\nprint(f\"  Normalized entropy: {result_mix.normalized_entropy:.3f}\")\n\nStraightforward negative text:\n  Entropy: 0.000\n  Normalized entropy: 0.000\n\nMixed emotional signals:\n  Entropy: 1.000\n  Normalized entropy: 0.077\n\n\nHigher entropy indicates more emotional mixing—the second passage scores higher entropy because it balances positive (“celebration,” “joy”) and negative (“bittersweet,” “sorrow”) terms. This can help identify:\n\nIronic or sarcastic passages (positive words in negative contexts)\nComplex emotional moments in narratives\nTurning points where sentiment is genuinely conflicted"
+  },
+  {
+    "objectID": "sentiment-lexicons.html#visualizing-a-complete-trajectory",
+    "href": "sentiment-lexicons.html#visualizing-a-complete-trajectory",
+    "title": "Using sentiment lexicons",
+    "section": "Visualizing a complete trajectory",
+    "text": "Visualizing a complete trajectory\nNow let’s score an entire novel and plot its emotional arc:\n\nfrom moodswing import prepare_trajectory, plot_trajectory, DCTTransform\nfrom moodswing.data import load_sample_text\n\n# Load a sample novel\ndoc_id, text = load_sample_text(\"portrait_artist\")\nprint(f\"Analyzing: {doc_id}\")\n\n# Split into sentences\nsentences = sentencizer.split(text)\nprint(f\"Total sentences: {len(sentences)}\")\n\nAnalyzing: portrait_artist\nTotal sentences: 5372\n\n\n\n# Compare Syuzhet vs. Bing lexicons\nsyuzhet_scores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\nbing_scores = analyzer.sentence_scores(sentences, method=\"bing\")\n\n# Prepare trajectories with smoothing\ntrajectory_syuzhet = prepare_trajectory(\n    syuzhet_scores,\n    rolling_window=int(len(syuzhet_scores) * 0.05),\n    dct_transform=DCTTransform(low_pass_size=10, output_length=200, scale_range=True)\n)\n\ntrajectory_bing = prepare_trajectory(\n    bing_scores,\n    rolling_window=int(len(bing_scores) * 0.05),\n    dct_transform=DCTTransform(low_pass_size=10, output_length=200, scale_range=True)\n)\n\n/tmp/ipykernel_2772/189807586.py:6: UserWarning:\n\nDCT transform already has scaling enabled (scale_range=True, scale_values=False). Skipping additional normalization of DCT output to prevent double-scaling. Raw and rolling components are still normalized.\n\n/tmp/ipykernel_2772/189807586.py:12: UserWarning:\n\nDCT transform already has scaling enabled (scale_range=True, scale_values=False). Skipping additional normalization of DCT output to prevent double-scaling. Raw and rolling components are still normalized.\n\n\n\n\nplot_trajectory(trajectory_syuzhet, title=f\"{doc_id} - Syuzhet Method\")\n\n\n\n\nNarrative arc using Syuzhet lexicon\n\n\n\n\n\nplot_trajectory(trajectory_bing, title=f\"{doc_id} - Bing Method\")\n\n\n\n\nNarrative arc using Bing lexicon\n\n\n\n\nBoth lexicons reveal similar overall patterns (the general “shape” of the story), though the Syuzhet lexicon often produces smoother curves because it was designed specifically for narrative analysis.\n\n\n\n\n\n\nShow only the smoothed arc\n\n\n\nFor presentations or cleaner visualizations, use the components parameter to display only the DCT smoothed line:\nplot_trajectory(trajectory_syuzhet, components=[\"dct\"], title=\"Emotional Arc\")\nThis removes visual clutter and focuses attention on the overall narrative shape."
+  },
+  {
+    "objectID": "sentiment-lexicons.html#performance-tips",
+    "href": "sentiment-lexicons.html#performance-tips",
+    "title": "Using sentiment lexicons",
+    "section": "Performance tips",
+    "text": "Performance tips\nWhen processing many texts or very long documents, preload the lexicon once rather than reloading it for each call:\n\n# Efficient: Load once, reuse many times\nsyuzhet_lex = loader.load(\"syuzhet\")\n\n# Now process multiple documents without reloading\ntexts_to_process = [\"Text 1...\", \"Text 2...\", \"Text 3...\"]\n\nfor text in texts_to_process:\n    sents = sentencizer.split(text)\n    # Pass the preloaded lexicon\n    scores = analyzer.sentence_scores(sents, lexicon=syuzhet_lex)\n    # ... continue processing"
+  },
+  {
+    "objectID": "sentiment-lexicons.html#choosing-the-right-lexicon",
+    "href": "sentiment-lexicons.html#choosing-the-right-lexicon",
+    "title": "Using sentiment lexicons",
+    "section": "Choosing the right lexicon",
+    "text": "Choosing the right lexicon\n\n\n\n\n\n\n\n\n\nLexicon\nBest for\nPros\nCons\n\n\n\n\nSyuzhet\nNovels, narratives\nOptimized for storytelling\nEnglish only\n\n\nAFINN\nSocial media, informal text\nIncludes slang, simple scale\nEnglish only, integer scores\n\n\nBing\nOpinion mining, reviews\nClear binary classification\nEnglish only, no gradation\n\n\nNRC\nEmotion-focused analysis\nMulti-dimensional emotions, multilingual\nMore complex to interpret\n\n\n\n\n\n\n\n\n\nStart with Syuzhet\n\n\n\nFor narrative analysis, start with the Syuzhet method (the default). It was designed specifically for tracking emotional arcs in stories and typically produces the most interpretable trajectories for literary texts.\n\n\n\n\n\n\n\n\nLanguage support\n\n\n\nThe Syuzhet, AFINN, and Bing lexicons are English-only. The NRC lexicon supports multiple languages including English, French, Spanish, German, Arabic, and more. Specify the language parameter when loading NRC or using nrc_emotions():\nanalyzer.nrc_emotions(sentences, language=\"spanish\")"
+  },
+  {
+    "objectID": "sentiment-lexicons.html#next-steps",
+    "href": "sentiment-lexicons.html#next-steps",
+    "title": "Using sentiment lexicons",
+    "section": "Next steps",
+    "text": "Next steps\n\nLearn about using spaCy for sentiment as an alternative to dictionaries\nExplore the technical details of the DCT transformation\nCheck the API reference for complete documentation"
+  },
+  {
+    "objectID": "technical-notes.html",
+    "href": "technical-notes.html",
+    "title": "Technical Notes",
+    "section": "",
+    "text": "This page documents implementation details, design decisions, and comparisons with the R syuzhet package. These notes are intended for users who want to understand the computational methods or need to reproduce results from the R ecosystem."
+  },
+  {
+    "objectID": "technical-notes.html#the-discrete-cosine-transform-dct",
+    "href": "technical-notes.html#the-discrete-cosine-transform-dct",
+    "title": "Technical Notes",
+    "section": "The Discrete Cosine Transform (DCT)",
+    "text": "The Discrete Cosine Transform (DCT)\nThe DCT is a key component of the smoothing pipeline, converting raw sentiment scores into the smooth “narrative arc” curves you see in trajectory plots.\n\nWhy DCT for narrative analysis?\nThe Discrete Cosine Transform is a signal processing technique that decomposes a time series into frequency components—similar to a Fourier transform but using only real numbers (no complex arithmetic). For sentiment trajectories:\n\nLow-frequency components represent gradual, long-term emotional trends (the overall arc)\nHigh-frequency components represent sentence-to-sentence noise\n\nBy keeping only the lowest-frequency components, we reveal the story’s underlying emotional structure while filtering out local variation (Jockers 2015).\n\n\nMathematical formulation\nThe implementation uses DCT-II (forward transform) and DCT-III (inverse transform):\nDCT-II (forward): \\[\nX_k = \\sum_{n=0}^{N-1} x_n \\cos\\left[\\frac{\\pi}{N}\\left(n + \\frac{1}{2}\\right)k\\right], \\quad k = 0, \\ldots, N-1\n\\]\nDCT-III (inverse): \\[\nx_n = \\frac{1}{2}X_0 + \\sum_{k=1}^{N-1} X_k \\cos\\left[\\frac{\\pi}{N}\\left(n + \\frac{1}{2}\\right)k\\right], \\quad n = 0, \\ldots, N-1\n\\]\nThe moodswing implementation uses NumPy’s FFT routines for computational efficiency, converting DCT to FFT via symmetric extension.\n\n\nHow the DCT pipeline works\n\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom moodswing import DCTTransform\n\n# Create synthetic \"sentiment scores\" with noise\nnp.random.seed(42)\ntime = np.linspace(0, 1, 100)\n# True signal: rise then fall (like a tragedy)\ntrue_signal = -4 * (time - 0.75)**2 + 0.5\n# Add noise\nnoisy_scores = true_signal + np.random.normal(0, 0.15, len(time))\n\n# Apply DCT smoothing\ndct = DCTTransform(low_pass_size=5, output_length=100, scale_range=False)\nsmoothed = dct.transform(noisy_scores)\n\n# Plot\nfig, ax = plt.subplots(figsize=(10, 4))\nax.plot(time, noisy_scores, 'o', alpha=0.3, label='Noisy scores', markersize=3)\nax.plot(time, true_signal, 'g--', linewidth=2, label='True signal', alpha=0.7)\nax.plot(time, smoothed, 'r-', linewidth=2, label=f'DCT (5 components)')\nax.axhline(0, color='k', linestyle=':', alpha=0.3)\nax.set_xlabel('Narrative time')\nax.set_ylabel('Sentiment')\nax.legend()\nax.set_title('DCT Smoothing Effect')\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\n\nThe red line (DCT smooth) captures the broad trajectory while ignoring sentence-level noise. The low_pass_size parameter controls how many frequency components to retain—smaller values produce smoother curves.\n\n\nChoosing low_pass_size\nThe low_pass_size parameter determines how many DCT coefficients to keep:\n\n2-5: Very smooth, shows only the broadest pattern (useful for high-level comparisons)\n5-10: Balanced smoothing (default in most examples)\n10-20: Preserves more detail, can show secondary peaks\n&gt;20: Minimal smoothing, may retain noise\n\n\n# Compare different smoothing levels\nfig, axes = plt.subplots(2, 2, figsize=(12, 8))\nfor idx, lps in enumerate([3, 7, 15, 30]):\n    ax = axes[idx // 2, idx % 2]\n    dct_temp = DCTTransform(low_pass_size=lps, output_length=100, scale_range=False)\n    smoothed_temp = dct_temp.transform(noisy_scores)\n    ax.plot(time, noisy_scores, 'o', alpha=0.2, markersize=2, color='gray')\n    ax.plot(time, smoothed_temp, 'r-', linewidth=2)\n    ax.axhline(0, color='k', linestyle=':', alpha=0.3)\n    ax.set_title(f'low_pass_size = {lps}')\n    ax.set_xlabel('Narrative time')\n    ax.set_ylabel('Sentiment')\n\nplt.tight_layout()\nplt.show()"
+  },
+  {
+    "objectID": "technical-notes.html#rolling-mean-vs.-dct",
+    "href": "technical-notes.html#rolling-mean-vs.-dct",
+    "title": "Technical Notes",
+    "section": "Rolling mean vs. DCT",
+    "text": "Rolling mean vs. DCT\nBoth smoothing methods reduce noise but work differently:\n\n\n\n\n\n\n\n\nMethod\nHow it works\nBest for\n\n\n\n\nRolling mean\nAverages neighboring points with a sliding window\nPreserving local features, medium-term trends\n\n\nDCT\nKeeps low-frequency spectral components\nGlobal narrative shape, comparing arc types\n\n\n\n\nfrom moodswing import rolling_mean\n\n# Compare the two approaches\nrolling_smoothed = rolling_mean(noisy_scores, window=15)\n\nfig, ax = plt.subplots(figsize=(10, 4))\nax.plot(time, noisy_scores, 'o', alpha=0.2, markersize=2, color='gray', label='Raw')\nax.plot(time, rolling_smoothed, 'b-', linewidth=2, label='Rolling mean (window=15)')\nax.plot(time, smoothed, 'r-', linewidth=2, label='DCT (5 components)')\nax.axhline(0, color='k', linestyle=':', alpha=0.3)\nax.set_xlabel('Narrative time')\nax.set_ylabel('Sentiment')\nax.legend()\nax.set_title('Rolling Mean vs. DCT Smoothing')\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\n\nRolling mean (blue) follows local trends more closely. DCT (red) emphasizes the global shape. For narrative arc analysis, DCT is typically preferred because it reveals archetypal patterns (Reagan et al. 2016)."
+  },
+  {
+    "objectID": "technical-notes.html#normalization-range-vs.-z-score",
+    "href": "technical-notes.html#normalization-range-vs.-z-score",
+    "title": "Technical Notes",
+    "section": "Normalization: Range vs. Z-score",
+    "text": "Normalization: Range vs. Z-score\nprepare_trajectory() offers two normalization modes to make scores comparable across texts:\n\nRange normalization (default)\nScales values to \\([-1, 1]\\): \\[\nx_{\\text{norm}} = 2 \\cdot \\frac{x - x_{\\min}}{x_{\\max} - x_{\\min}} - 1\n\\]\nPros: Preserves the relative positions of peaks and valleys\nCons: Sensitive to outliers\n\n\nZ-score normalization\nStandardizes to mean=0, standard deviation=1: \\[\nx_{\\text{norm}} = \\frac{x - \\mu}{\\sigma}\n\\]\nPros: Robust to outliers\nCons: Can distort the apparent magnitude of changes\n\nfrom moodswing import prepare_trajectory\n\n# Create data with an outlier\nscores_with_outlier = list(noisy_scores)\nscores_with_outlier[50] = 3.0  # Big positive spike\n\n# Compare normalization modes\ntrajectory_range = prepare_trajectory(\n    scores_with_outlier, \n    normalize=\"range\",\n    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=False)\n)\n\ntrajectory_zscore = prepare_trajectory(\n    scores_with_outlier,\n    normalize=\"zscore\", \n    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=False)\n)\n\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))\n\nax1.plot(trajectory_range.raw, alpha=0.5, label='Range normalized')\nax1.set_title('Range Normalization')\nax1.set_xlabel('Sentence index')\nax1.set_ylabel('Normalized sentiment')\nax1.axhline(0, color='k', linestyle=':', alpha=0.3)\nax1.legend()\n\nax2.plot(trajectory_zscore.raw, alpha=0.5, label='Z-score normalized', color='orange')\nax2.set_title('Z-score Normalization')\nax2.set_xlabel('Sentence index')\nax2.set_ylabel('Normalized sentiment')\nax2.axhline(0, color='k', linestyle=':', alpha=0.3)\nax2.legend()\n\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\n\nFor most literary analysis, range normalization is recommended because it preserves the shape of the original distribution."
+  },
+  {
+    "objectID": "technical-notes.html#comparison-with-r-syuzhet",
+    "href": "technical-notes.html#comparison-with-r-syuzhet",
+    "title": "Technical Notes",
+    "section": "Comparison with R syuzhet",
+    "text": "Comparison with R syuzhet\nThe Python moodswing package aims for compatibility with the R syuzhet package while adapting to Python conventions.\n\nWhat’s identical\n\nLexicons: The four dictionaries (Syuzhet, AFINN, Bing, NRC) use the same word-score mappings\nDCT algorithm: Produces mathematically identical results given the same input\nSmoothing approach: Same spectral filtering logic\n\n\n\nKey differences\n\n1. Hyphenated words\nR syuzhet: Strips hyphens before lexicon lookup\n# In R: \"well-intentioned\" becomes \"well\" + \"intentioned\"\nget_sentiment(\"well-intentioned\", method=\"syuzhet\")\nPython moodswing: Preserves hyphens by default\n\nfrom moodswing import DictionarySentimentAnalyzer\n\nanalyzer = DictionarySentimentAnalyzer()\n# \"well-intentioned\" is looked up as a single token\nscore = analyzer.sentence_scores([\"The well-intentioned effort failed.\"], method=\"syuzhet\")\nprint(f\"Score: {score}\")\n\nScore: [-0.5]\n\n\nWhy the difference? Python’s NLTK tokenizer treats hyphenated words as single tokens, which is linguistically defensible (e.g., “well-intentioned” has a different meaning than “well” + “intentioned” separately).\nTo match R behavior: Pre-process your text to remove hyphens before scoring:\n\ntext = \"The well-intentioned effort failed.\"\ntext_no_hyphens = text.replace(\"-\", \" \")\nscore_r_style = analyzer.sentence_scores([text_no_hyphens], method=\"syuzhet\")\nprint(f\"R-style score: {score_r_style}\")\n\nR-style score: [0.30000000000000004]\n\n\n\n\n2. Sentence splitting\nR syuzhet: Uses get_sentences() from the stringr package\nPython moodswing: Uses NLTK’s Punkt tokenizer\nBoth handle most texts similarly, but edge cases (especially with abbreviations or unusual punctuation) may differ slightly. NLTK’s Punkt is trained on the Penn Treebank and handles English abbreviations well.\n\n\n3. NRC language support\nR syuzhet: NRC lexicon is English-only in most installations\nPython moodswing: Ships with multilingual NRC data\n\nfrom moodswing.lexicons import LexiconLoader\n\nloader = LexiconLoader()\n\n# English\nnrc_en = loader.load(\"nrc\", language=\"english\")\nprint(\"English 'love':\", nrc_en.emotions_for(\"love\"))\n\n# French\nnrc_fr = loader.load(\"nrc\", language=\"french\")\nprint(\"French 'amour':\", nrc_fr.emotions_for(\"amour\"))\n\nEnglish 'love': {'positive': 1.0, 'joy': 1.0}\nFrench 'amour': {'positive': 1.0, 'anticipation': 1.0, 'joy': 1.0, 'trust': 1.0}\n\n\n\n\n\nValidation against R\nThe package includes test data from R syuzhet to verify compatibility:\n\nimport pandas as pd\n\n# Load reference data from R syuzhet vignette\n# (This is stored in tests/data/mb_sentiment.tsv)\n# Shows that DCT outputs match R to floating-point precision\ntest_file = \"../tests/data/mb_sentiment.tsv\"\ntry:\n    r_reference = pd.read_csv(test_file, sep=\"\\t\")\n    print(\"R reference data columns:\", r_reference.columns.tolist())\n    print(f\"First few rows:\\n{r_reference.head()}\")\nexcept FileNotFoundError:\n    print(\"Reference data not found (only available in package source)\")\n\nR reference data columns: ['sentiment', 'sentence']\nFirst few rows:\n   sentiment                                           sentence\n0       1.20  Part I Chapter One We were in class when the h...\n1       0.25  Those who had been asleep woke up, and every o...\n2       0.00     The head-master made a sign to us to sit down.\n3       1.50  Then, turning to the class-master, he said to ...\n4       1.05  If his work and conduct are satisfactory, he w..."
+  },
+  {
+    "objectID": "technical-notes.html#performance-characteristics",
+    "href": "technical-notes.html#performance-characteristics",
+    "title": "Technical Notes",
+    "section": "Performance characteristics",
+    "text": "Performance characteristics\n\nDictionary-based analysis\n\nimport time\nfrom moodswing.data import load_sample_text\n\ndoc_id, text = load_sample_text(\"portrait_of_the_artist\")\nsentences = Sentencizer().split(text)\n\nstart = time.time()\nscores = analyzer.sentence_scores(sentences, method=\"syuzhet\")\nelapsed = time.time() - start\n\nprint(f\"Processed {len(sentences)} sentences in {elapsed:.3f}s\")\nprint(f\"Rate: {len(sentences)/elapsed:.0f} sentences/second\")\n\nTypical performance: 5,000-20,000 sentences/second on a modern laptop. Dictionary lookups are extremely fast—the bottleneck is usually tokenization.\n\n\nspaCy-based analysis\nspaCy is 10-100× slower than dictionaries due to neural network processing:\n\nSmall model (en_core_web_sm): ~100-500 sentences/second\nMedium/large models: ~50-200 sentences/second\n\nFor large corpora (hundreds of novels), dictionary methods are strongly recommended unless context-awareness is critical."
+  },
+  {
+    "objectID": "technical-notes.html#design-decisions",
+    "href": "technical-notes.html#design-decisions",
+    "title": "Technical Notes",
+    "section": "Design decisions",
+    "text": "Design decisions\n\nWhy dataclasses?\nAll major components (DictionarySentimentAnalyzer, DCTTransform, etc.) are implemented as dataclasses:\n@dataclass(slots=True)\nclass DictionarySentimentAnalyzer:\n    loader: LexiconLoader = field(default_factory=LexiconLoader)\n    tokenizer: Tokenizer = field(default_factory=Tokenizer)\n    # ...\nBenefits: - Automatic __init__, __repr__, etc. - Type hints throughout - slots=True reduces memory overhead - Easy to instantiate with custom components\n\n\nWhy separate sentence splitting?\nUnlike R syuzhet’s all-in-one functions, moodswing separates sentence splitting from scoring:\n# Explicit pipeline\nsentences = sentencizer.split(text)\nscores = analyzer.sentence_scores(sentences)\nBenefits: - Reuse sentence splits across multiple analyses - Swap in custom sentence splitters - Apply preprocessing between steps - Clearer data flow for debugging\n\n\nImmutability and statelessness\nAnalyzers are designed to be reusable without side effects:\nanalyzer = DictionarySentimentAnalyzer()\nscores1 = analyzer.sentence_scores(text1)\nscores2 = analyzer.sentence_scores(text2)  # No interference\nThis makes parallel processing safe and results reproducible."
+  },
+  {
+    "objectID": "technical-notes.html#references",
+    "href": "technical-notes.html#references",
+    "title": "Technical Notes",
+    "section": "References",
+    "text": "References\n\n\nJockers, Matthew L. 2015. “Syuzhet: Extract Sentiment and Plot Arcs from Text.” The R Journal 7 (1): 37–51. https://doi.org/10.32614/RJ-2015-004.\n\n\nReagan, Andrew J, Lewis Mitchell, Dilan Kiley, Christopher M Danforth, and Peter Sheridan Dodds. 2016. “The Emotional Arcs of Stories Are Dominated by Six Basic Shapes.” EPJ Data Science 5 (1): 1–12. https://doi.org/10.1140/epjds/s13688-016-0093-1."
+  }
+]

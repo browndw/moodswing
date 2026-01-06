@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.557">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>moodswing - Get started</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    <img src="./logo.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">moodswing</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./get-started.html" aria-current="page"> 
+<span class="menu-text">Get started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./sentiment-lexicons.html"> 
+<span class="menu-text">Using sentiment lexicons</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./sentiment-spacy.html"> 
+<span class="menu-text">Using spaCy for sentiment</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-reference">    
+        <li>
+    <a class="dropdown-item" href="./technical-notes.html">
+ <span class="dropdown-text">Technical Notes</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./reference/index.html">
+ <span class="dropdown-text">Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-visualizations" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Visualizations</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-visualizations">    
+        <li>
+    <a class="dropdown-item" href="./visualization-guide.html">
+ <span class="dropdown-text">Visualization Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./examples-gallery.html">
+ <span class="dropdown-text">Examples Gallery</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-learn-more" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Learn more</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-learn-more">    
+        <li>
+    <a class="dropdown-item" href="https://programminghistorian.org/en/lessons/sentiment-analysis-syuzhet" target="_blank">
+ <span class="dropdown-text">Sentiment analysis with suyzhet</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://perma.cc/TYT3-5DTU" target="_blank">
+ <span class="dropdown-text">Critique of suyzhet</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/browndw/moodswing"> <i class="bi bi-github" role="img" aria-label="moodswing on GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Get started</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This walkthrough demonstrates the complete workflow: loading a sample novel, splitting it into sentences, scoring each sentence, and plotting a smoothed sentiment trajectory that reveals the story’s emotional arc.</p>
+<section id="background-why-track-sentiment-over-narrative-time" class="level2">
+<h2 class="anchored" data-anchor-id="background-why-track-sentiment-over-narrative-time">Background: Why track sentiment over narrative time?</h2>
+<p>Stories follow emotional patterns. As readers, we intuitively recognize rising tension, climactic moments, and resolutions. Computational sentiment analysis makes these patterns visible and measurable <span class="citation" data-cites="jockers2015syuzhet reagan2016emotional">(<a href="#ref-jockers2015syuzhet" role="doc-biblioref">Jockers 2015</a>; <a href="#ref-reagan2016emotional" role="doc-biblioref">Reagan et al. 2016</a>)</span>.</p>
+<p>By scoring the sentiment of each sentence in a novel and smoothing those scores, we can visualize the <strong>narrative arc</strong>—the trajectory of emotional valence from beginning to end. Research has shown that stories cluster around a small number of archetypal shapes <span class="citation" data-cites="reagan2016emotional">(<a href="#ref-reagan2016emotional" role="doc-biblioref">Reagan et al. 2016</a>)</span>, and that analyzing these arcs can reveal otherwise hidden structures in narrative <span class="citation" data-cites="elkins2025beyond hu2021dynamic">(<a href="#ref-elkins2025beyond" role="doc-biblioref">Elkins 2025</a>; <a href="#ref-hu2021dynamic" role="doc-biblioref">Hu et al. 2020</a>)</span>.</p>
+<p>The <strong>moodswing</strong> package brings this approach to Python, implementing the same workflow as the R <code>syuzhet</code> package <span class="citation" data-cites="jockers2015syuzhet">(<a href="#ref-jockers2015syuzhet" role="doc-biblioref">Jockers 2015</a>)</span> while adding modern NLP options. This method has become widely used in digital humanities research <span class="citation" data-cites="rebora2023sentiment">(<a href="#ref-rebora2023sentiment" role="doc-biblioref">Rebora et al. 2023</a>)</span>, particularly for analyzing large corpora where close reading alone would be impractical.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+For deeper background
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For a comprehensive discussion of sentiment analysis in literary studies, see <span class="citation" data-cites="rebora2023sentiment">Rebora et al. (<a href="#ref-rebora2023sentiment" role="doc-biblioref">2023</a>)</span> and <span class="citation" data-cites="elkins2022shapes">Elkins (<a href="#ref-elkins2022shapes" role="doc-biblioref">2022</a>)</span>. The original R implementation and its theoretical foundation are described in <span class="citation" data-cites="jockers2015syuzhet">Jockers (<a href="#ref-jockers2015syuzhet" role="doc-biblioref">2015</a>)</span>.</p>
+</div>
+</div>
+</section>
+<section id="prerequisites" class="level2">
+<h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<p>Import the high-level helpers we’ll use throughout this guide:</p>
+<div id="34a3c1f5" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> moodswing <span class="im">import</span> (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    DictionarySentimentAnalyzer,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Sentencizer,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    DCTTransform,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    prepare_trajectory,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    plot_trajectory,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> moodswing.data <span class="im">import</span> load_sample_text</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="loading-a-text" class="level2">
+<h2 class="anchored" data-anchor-id="loading-a-text">Loading a text</h2>
+<p>The package bundles several public-domain novels for experimentation. Each helper returns a tuple of <code>(doc_id, text)</code>:</p>
+<div id="cb4218fc" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>doc_id, text <span class="op">=</span> load_sample_text(<span class="st">"madame_bovary"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Loaded: </span><span class="sc">{</span>doc_id<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Length: </span><span class="sc">{</span><span class="bu">len</span>(text)<span class="sc">:,}</span><span class="ss"> characters"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Loaded: madame_bovary
+Length: 648,257 characters</code></pre>
+</div>
+</div>
+<p>You can also load your own texts using <code>load_text_file()</code> or <code>load_text_directory()</code> (see the <a href="./reference/index.html">API reference</a> for details).</p>
+</section>
+<section id="splitting-text-into-sentences" class="level2">
+<h2 class="anchored" data-anchor-id="splitting-text-into-sentences">Splitting text into sentences</h2>
+<p>Sentence-level analysis is the foundation of sentiment trajectories. The <code>Sentencizer</code> uses NLTK’s Punkt tokenizer, which handles abbreviations, quotations, and other boundary ambiguities:</p>
+<div id="86fc0860" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>sentencizer <span class="op">=</span> Sentencizer()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sentences <span class="op">=</span> sentencizer.split(text)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total sentences: </span><span class="sc">{</span><span class="bu">len</span>(sentences)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">First five sentences:"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, sent <span class="kw">in</span> <span class="bu">enumerate</span>(sentences[:<span class="dv">5</span>], <span class="dv">1</span>):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">. </span><span class="sc">{</span>sent[:<span class="dv">70</span>]<span class="sc">}</span><span class="ss">..."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total sentences: 6943
+
+First five sentences:
+1. Part I Chapter One We were in class when the head-master came in, foll...
+2. Those who had been asleep woke up, and every one rose as if just surpr...
+3. The head-master made a sign to us to sit down....
+4. Then, turning to the class-master, he said to him in a low voice-- "Mo...
+5. If his work and conduct are satisfactory, he will go into one of the u...</code></pre>
+</div>
+</div>
+</section>
+<section id="scoring-sentences" class="level2">
+<h2 class="anchored" data-anchor-id="scoring-sentences">Scoring sentences</h2>
+<p><code>DictionarySentimentAnalyzer</code> evaluates each sentence by summing the sentiment values of its constituent words. We’ll use the <strong>Syuzhet</strong> lexicon, which was designed specifically for narrative analysis <span class="citation" data-cites="jockers2015syuzhet">(<a href="#ref-jockers2015syuzhet" role="doc-biblioref">Jockers 2015</a>)</span>:</p>
+<div id="9eddfc84" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>analyzer <span class="op">=</span> DictionarySentimentAnalyzer()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> analyzer.sentence_scores(sentences, method<span class="op">=</span><span class="st">"syuzhet"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Score range: [</span><span class="sc">{</span><span class="bu">min</span>(scores)<span class="sc">:.2f}</span><span class="ss">, </span><span class="sc">{</span><span class="bu">max</span>(scores)<span class="sc">:.2f}</span><span class="ss">]"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean score: </span><span class="sc">{</span><span class="bu">sum</span>(scores)<span class="op">/</span><span class="bu">len</span>(scores)<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">First five scores: </span><span class="sc">{</span>scores[:<span class="dv">5</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Score range: [-4.90, 8.20]
+Mean score: 0.060
+
+First five scores: [1.2000000000000002, 0.25, 0.0, 1.5, 1.05]</code></pre>
+</div>
+</div>
+<p>Each score represents the <strong>emotional valence</strong> of that sentence: positive numbers indicate pleasant or optimistic language, negative numbers indicate unpleasant or pessimistic language, and zero indicates neutral or absent sentiment words.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Try different lexicons
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <code>method</code> parameter accepts <code>"syuzhet"</code> (default), <code>"afinn"</code>, <code>"bing"</code>, or <code>"nrc"</code>. Each lexicon has different characteristics. See <a href="./sentiment-lexicons.html">Using sentiment lexicons</a> for detailed comparisons.</p>
+</div>
+</div>
+</section>
+<section id="transforming-the-scores" class="level2">
+<h2 class="anchored" data-anchor-id="transforming-the-scores">Transforming the scores</h2>
+<p>Raw sentence-by-sentence scores are noisy—individual words can spike the signal. We apply two smoothing operations to reveal the underlying emotional trajectory:</p>
+<ol type="1">
+<li><strong>Rolling mean</strong>: A moving average that reduces local noise</li>
+<li><strong>Discrete Cosine Transform (DCT)</strong>: A spectral smoothing technique that emphasizes the overall shape</li>
+</ol>
+<p>Both are computed by <code>prepare_trajectory()</code>:</p>
+<div id="b431c5ae" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>trajectory <span class="op">=</span> prepare_trajectory(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    scores,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    rolling_window<span class="op">=</span><span class="bu">max</span>(<span class="dv">3</span>, <span class="bu">int</span>(<span class="bu">len</span>(scores) <span class="op">*</span> <span class="fl">0.1</span>)),  <span class="co"># ~10% of sentences</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    dct_transform<span class="op">=</span>DCTTransform(</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        low_pass_size<span class="op">=</span><span class="dv">10</span>,      <span class="co"># Keep only low-frequency components (note that a lower value like 5 will show less fluctuations)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        output_length<span class="op">=</span><span class="dv">200</span>,     <span class="co"># Interpolate to 200 points for plotting</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        scale_range<span class="op">=</span><span class="va">True</span>       <span class="co"># Normalize to [-1, 1]</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(trajectory)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>TrajectoryComponents(raw=array([-0.06870229, -0.21374046, -0.2519084 , ..., -0.36641221,
+       -0.06870229, -0.16030534], shape=(6943,)), rolling=array([ 0.5443787 ,  0.54224028,  0.52419473, ..., -0.82508478,
+       -0.81303351, -0.81826638], shape=(6943,)), dct=array([ 0.8207369 ,  0.82298883,  0.8274407 ,  0.83398953,  0.84248315,
+        0.85272299,  0.86446766,  0.87743733,  0.89131877,  0.90577107,
+        0.92043177,  0.93492343,  0.94886051,  0.9618563 ,  0.97353001,
+        0.98351363,  0.99145867,  0.99704247,  0.99997417,  1.        ,
+        0.99690802,  0.99053207,  0.98075494,  0.96751068,  0.95078606,
+        0.93062106,  0.9071085 ,  0.8803927 ,  0.85066734,  0.81817246,
+        0.78319065,  0.74604256,  0.70708184,  0.66668949,  0.62526776,
+        0.58323389,  0.54101343,  0.49903367,  0.45771702,  0.4174745 ,
+        0.37869959,  0.34176234,  0.30700404,  0.27473237,  0.24521719,
+        0.21868704,  0.19532636,  0.17527353,  0.15861964,  0.14540813,
+        0.13563521,  0.12925101,  0.12616159,  0.12623149,  0.12928701,
+        0.13512006,  0.14349238,  0.1541403 ,  0.16677965,  0.18111096,
+        0.19682477,  0.21360684,  0.23114337,  0.24912599,  0.26725645,
+        0.285251  ,  0.30284431,  0.3197929 ,  0.33587806,  0.35090817,
+        0.3647204 ,  0.37718186,  0.38819003,  0.39767269,  0.40558721,
+        0.41191928,  0.4166812 ,  0.41990967,  0.4216632 ,  0.42201926,
+        0.42107108,  0.41892445,  0.41569425,  0.41150111,  0.40646808,
+        0.40071746,  0.39436784,  0.38753139,  0.38031154,  0.37280094,
+        0.3650799 ,  0.35721524,  0.34925962,  0.34125124,  0.33321408,
+        0.32515849,  0.31708228,  0.30897206,  0.30080497,  0.29255066,
+        0.28417347,  0.2756348 ,  0.26689547,  0.25791817,  0.24866983,
+        0.23912386,  0.2292622 ,  0.21907712,  0.20857278,  0.19776631,
+        0.1866887 ,  0.17538507,  0.16391471,  0.15235051,  0.14077808,
+        0.12929436,  0.1180059 ,  0.10702675,  0.09647595,  0.08647489,
+        0.07714434,  0.06860135,  0.06095614,  0.05430885,  0.04874648,
+        0.0443399 ,  0.04114108,  0.03918061,  0.03846557,  0.03897779,
+        0.0406726 ,  0.043478  ,  0.04729446,  0.05199523,  0.05742719,
+        0.06341228,  0.06974955,  0.07621761,  0.08257769,  0.08857708,
+        0.093953  ,  0.09843674,  0.10175813,  0.10365012,  0.10385346,
+        0.1021214 ,  0.09822429,  0.091954  ,  0.08312807,  0.07159349,
+        0.05723013,  0.03995358,  0.01971745, -0.0034849 , -0.02961932,
+       -0.05861052, -0.09034243, -0.12465922, -0.16136707, -0.20023661,
+       -0.24100593, -0.28338431, -0.32705633, -0.37168657, -0.41692463,
+       -0.46241041, -0.50777968, -0.55266968, -0.59672474, -0.6396018 ,
+       -0.68097573, -0.72054435, -0.75803306, -0.793199  , -0.8258346 ,
+       -0.85577062, -0.88287838, -0.90707139, -0.92830613, -0.94658213,
+       -0.96194126, -0.97446622, -0.98427839, -0.99153489, -0.99642508,
+       -0.99916644, -1.        , -0.99918528, -0.99699502, -0.99370961,
+       -0.98961144, -0.98497927, -0.98008263, -0.97517647, -0.97049613,
+       -0.9662527 , -0.96262882, -0.95977511, -0.95780719, -0.95680345]))</code></pre>
+</div>
+</div>
+<p>The <code>TrajectoryComponents</code> object holds three arrays: - <code>raw</code>: Original normalized scores - <code>rolling</code>: Rolling-mean smoothed scores<br>
+- <code>dct</code>: DCT smoothed scores (the “narrative arc”)</p>
+</section>
+<section id="plotting-a-sentiment-trajectory" class="level2">
+<h2 class="anchored" data-anchor-id="plotting-a-sentiment-trajectory">Plotting a sentiment trajectory</h2>
+<p>Visualize all three curves together to see how smoothing reveals narrative structure:</p>
+<div id="e66c505a" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>plot_trajectory(trajectory, title<span class="op">=</span><span class="ss">f"</span><span class="sc">{</span>doc_id<span class="sc">}</span><span class="ss"> Sentiment Trajectory"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="get-started_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+<figcaption>Sentiment trajectory showing raw scores (gray), rolling mean (blue), and DCT smooth (red)</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpreting the plot:</strong></p>
+<ul>
+<li><strong>Gray dots/line</strong> (raw): Noisy sentence-level scores</li>
+<li><strong>Blue line</strong> (rolling mean): Medium-term emotional trends</li>
+<li><strong>Red line</strong> (DCT smooth): The overall narrative arc—the “shape” of the story</li>
+</ul>
+<p>The DCT curve reveals the story’s broad emotional structure. In many narratives, you’ll see classic patterns: a gradual rise to a climactic peak, followed by a fall or resolution <span class="citation" data-cites="reagan2016emotional">(<a href="#ref-reagan2016emotional" role="doc-biblioref">Reagan et al. 2016</a>)</span>.</p>
+</section>
+<section id="working-with-dataframes" class="level2">
+<h2 class="anchored" data-anchor-id="working-with-dataframes">Working with DataFrames</h2>
+<p>For custom analysis and visualization, you can convert trajectory data to a pandas DataFrame. This enables advanced plotting, statistical analysis, and data export:</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+pandas required
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <code>trajectory_to_dataframe()</code> function requires pandas, which is installed automatically as a dependency when you install moodswing. If you’re working in a minimal environment, ensure pandas is available:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install pandas</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="5b1a2aca" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> moodswing <span class="im">import</span> trajectory_to_dataframe</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to tidy long-format DataFrame</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> trajectory_to_dataframe(trajectory)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.head(<span class="dv">10</span>))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">DataFrame shape: </span><span class="sc">{</span>df<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Components: </span><span class="sc">{</span>df[<span class="st">'component'</span>]<span class="sc">.</span>unique()<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   position component     value
+0  0.000000       raw -0.068702
+1  0.000144       raw -0.213740
+2  0.000288       raw -0.251908
+3  0.000432       raw -0.022901
+4  0.000576       raw -0.091603
+5  0.000720       raw -0.068702
+6  0.000864       raw -0.099237
+7  0.001008       raw -0.290076
+8  0.001152       raw -0.251908
+9  0.001296       raw -0.190840
+
+DataFrame shape: (14086, 3)
+Components: ['raw' 'rolling' 'dct']</code></pre>
+</div>
+</div>
+<section id="custom-plotting" class="level3">
+<h3 class="anchored" data-anchor-id="custom-plotting">Custom plotting</h3>
+<p>With the DataFrame, you have full control over visualization. For example, plot only the smoothed components with custom styling:</p>
+<div id="0c43f614" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to smoothed components only</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>df_smooth <span class="op">=</span> df[df[<span class="st">'component'</span>].isin([<span class="st">'rolling'</span>, <span class="st">'dct'</span>])]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create custom plot</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>), dpi<span class="op">=</span><span class="dv">150</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> component <span class="kw">in</span> [<span class="st">'rolling'</span>, <span class="st">'dct'</span>]:</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> df_smooth[df_smooth[<span class="st">'component'</span>] <span class="op">==</span> component]</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    ax.plot(</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        data[<span class="st">'position'</span>], </span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        data[<span class="st">'value'</span>],</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>component.title(),</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span> <span class="cf">if</span> component <span class="op">==</span> <span class="st">'dct'</span> <span class="cf">else</span> <span class="fl">1.5</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>ax.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">'black'</span>, linewidth<span class="op">=</span><span class="fl">0.5</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Narrative Position'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Sentiment'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="ss">f'</span><span class="sc">{</span>doc_id<span class="sc">}</span><span class="ss">: Smoothed Emotional Arc'</span>, fontsize<span class="op">=</span><span class="dv">13</span>)</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>ax.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>ax.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="get-started_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+<figcaption>Custom plot showing only DCT and rolling mean trajectories</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="statistical-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="statistical-analysis">Statistical analysis</h3>
+<p>The DataFrame format makes it easy to compute statistics or filter specific regions:</p>
+<div id="a54ef6ba" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary statistics by component</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.groupby(<span class="st">'component'</span>)[<span class="st">'value'</span>].describe())</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Find the emotional peak (highest DCT value)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>dct_data <span class="op">=</span> df[df[<span class="st">'component'</span>] <span class="op">==</span> <span class="st">'dct'</span>]</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>peak_idx <span class="op">=</span> dct_data[<span class="st">'value'</span>].idxmax()</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>peak <span class="op">=</span> dct_data.loc[peak_idx]</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Emotional peak: </span><span class="sc">{</span>peak[<span class="st">'value'</span>]<span class="sc">:.3f}</span><span class="ss"> at position </span><span class="sc">{</span>peak[<span class="st">'position'</span>]<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            count      mean       std  min       25%       50%       75%  max
+component                                                                    
+dct         200.0  0.122557  0.555607 -1.0  0.039130  0.175329  0.405807  1.0
+raw        6943.0 -0.242797  0.135901 -1.0 -0.290076 -0.251908 -0.175573  1.0
+rolling    6943.0  0.087239  0.482015 -1.0 -0.104943  0.154194  0.413157  1.0
+
+Emotional peak: 1.000 at position 0.10</code></pre>
+</div>
+</div>
+</section>
+<section id="exporting-data" class="level3">
+<h3 class="anchored" data-anchor-id="exporting-data">Exporting data</h3>
+<p>Export the trajectory data for use in other tools or for archival purposes:</p>
+<div id="8e4ce032" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save to CSV</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>df.to_csv(<span class="st">'madame_bovary_trajectory.csv'</span>, index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Exported to madame_bovary_trajectory.csv"</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Or save as Excel with multiple sheets</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pd.ExcelWriter(<span class="st">'sentiment_analysis.xlsx'</span>) <span class="im">as</span> writer:</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    df.to_excel(writer, sheet_name<span class="op">=</span><span class="st">'trajectory'</span>, index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    pd.DataFrame({<span class="st">'sentence'</span>: sentences, <span class="st">'score'</span>: scores}).to_excel(</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        writer, sheet_name<span class="op">=</span><span class="st">'raw_scores'</span>, index<span class="op">=</span><span class="va">False</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Using seaborn or plotly
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The tidy DataFrame format works seamlessly with modern plotting libraries:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>sns.lineplot(data<span class="op">=</span>df, x<span class="op">=</span><span class="st">'position'</span>, y<span class="op">=</span><span class="st">'value'</span>, hue<span class="op">=</span><span class="st">'component'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Or for interactive plots:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.line(df, x<span class="op">=</span><span class="st">'position'</span>, y<span class="op">=</span><span class="st">'value'</span>, color<span class="op">=</span><span class="st">'component'</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="whats-next" class="level2">
+<h2 class="anchored" data-anchor-id="whats-next">What’s next?</h2>
+<p>This basic workflow can be extended in many ways:</p>
+<ul>
+<li><strong>Compare lexicons</strong>: Try <code>method="bing"</code> or <code>method="afinn"</code> to see how different dictionaries reveal different patterns</li>
+<li><strong>Use spaCy</strong>: For context-aware sentiment that handles negation, see <a href="./sentiment-spacy.html">Using spaCy for sentiment</a></li>
+<li><strong>Analyze emotions</strong>: Use the NRC lexicon to track specific emotions (fear, joy, anger) rather than just overall valence</li>
+<li><strong>Process multiple texts</strong>: Use <code>load_text_directory()</code> to batch-process an entire corpus</li>
+</ul>
+<p>For detailed exploration of these techniques, continue to the specialized guides in the navigation bar.</p>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-elkins2022shapes" class="csl-entry" role="listitem">
+Elkins, Katherine. 2022. <em>The Shapes of Stories: Sentiment Analysis for Narrative</em>. Cambridge University Press.
+</div>
+<div id="ref-elkins2025beyond" class="csl-entry" role="listitem">
+———. 2025. <span>“Beyond Plot: How Sentiment Analysis Reshapes Our Understanding of Narrative Structure.”</span> <em>Journal of Cultural Analytics</em> 10 (3). <a href="https://doi.org/10.22148/001c.143671">https://doi.org/10.22148/001c.143671</a>.
+</div>
+<div id="ref-hu2021dynamic" class="csl-entry" role="listitem">
+Hu, Qiyue, Bin Liu, Mads Rosendahl Thomsen, Jianbo Gao, and Kristoffer L Nielbo. 2020. <span>“Dynamic Evolution of Sentiments in Never Let Me Go: Insights from Multifractal Theory and Its Implications for Literary Analysis.”</span> <em>Digital Scholarship in the Humanities</em> 36 (2): 322–32. <a href="https://doi.org/10.1093/llc/fqz092">https://doi.org/10.1093/llc/fqz092</a>.
+</div>
+<div id="ref-jockers2015syuzhet" class="csl-entry" role="listitem">
+Jockers, Matthew L. 2015. <span>“Syuzhet: Extract Sentiment and Plot Arcs from Text.”</span> <em>The R Journal</em> 7 (1): 37–51. <a href="https://doi.org/10.32614/RJ-2015-004">https://doi.org/10.32614/RJ-2015-004</a>.
+</div>
+<div id="ref-reagan2016emotional" class="csl-entry" role="listitem">
+Reagan, Andrew J, Lewis Mitchell, Dilan Kiley, Christopher M Danforth, and Peter Sheridan Dodds. 2016. <span>“The Emotional Arcs of Stories Are Dominated by Six Basic Shapes.”</span> <em>EPJ Data Science</em> 5 (1): 1–12. <a href="https://doi.org/10.1140/epjds/s13688-016-0093-1">https://doi.org/10.1140/epjds/s13688-016-0093-1</a>.
+</div>
+<div id="ref-rebora2023sentiment" class="csl-entry" role="listitem">
+Rebora, Simone et al. 2023. <span>“Sentiment Analysis in Literary Studies. A Critical Survey.”</span> <em>Digital Humanities Quarterly</em> 17 (2): 1–17. <a href="https://dhq.digitalhumanities.org/vol/17/2/000691/000691.html">https://dhq.digitalhumanities.org/vol/17/2/000691/000691.html</a>.
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
