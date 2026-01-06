@@ -26,8 +26,8 @@ def test_nrc_emotions_positive_negative_keys():
 
 def test_mixed_messages_entropy_bounds():
     analyzer = DictionarySentimentAnalyzer()
-    entropy, metric_entropy = analyzer.mixed_messages(
+    result = analyzer.mixed_messages(
         "I loved it but I hated it."
         )
-    assert entropy >= 0
-    assert metric_entropy >= 0
+    assert result.entropy >= 0
+    assert result.normalized_entropy >= 0
