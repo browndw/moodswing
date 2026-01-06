@@ -1,0 +1,14 @@
+# load_text_file { #moodswing.data.load_text_file }
+
+```python
+data.load_text_file(path, *, strict_ascii=True)
+```
+
+Read a single ``.txt`` file and return a cleaned ``{doc_id, text}`` record.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type        | Description                                                                                        | Default    |
+|--------------|-------------|----------------------------------------------------------------------------------------------------|------------|
+| path         | str \| Path | File to read.                                                                                      | _required_ |
+| strict_ascii | bool        | Drop non-ASCII bytes when ``True`` (default) to sidestep spaCy model quirks on unusual characters. | `True`     |

@@ -1,0 +1,97 @@
+---
+title: "moodswing"
+jupyter: python3
+---
+
+`moodswing` helps you trace the emotional beats of novels, memoirs, or other long texts. Inspired by Matthew Jockers' [`syuzhet`](https://cran.r-project.org/web/packages/syuzhet/), it keeps the same story arc workflow but makes every step available inside a modern Python notebook.
+
+## Why use moodswing?
+
+- **Familiar sentiment dictionaries are built in.** NRC, Bing, AFINN, and Syuzhet ship with the package, so you can describe a story's "mood swings" using lists of words you may already know from the R ecosystem.
+- **Modern NLP is optional but ready.** If you install spaCy, moodswing can split sentences and estimate sentiment using pretrained English models (or your own pipeline). It even attaches TextBlob-like sentiment automatically when needed.
+- **Plots highlight the story arc.** Built-in smoothing turns raw sentence scores into the gentle curves popularized by `syuzhet`, making it easy to point at climaxes, reversals, and endings during analysis or teaching.
+- **One workflow fits poets and programmers alike.** Everything runs in Jupyter, but there's also a one-line command for batch plots when you just need pictures.
+
+## Installation
+
+```bash
+pip install moodswing
+```
+
+If you plan to use the spaCy analyzer, install a language model too (for example `python -m spacy download en_core_web_sm`).
+
+## Quick start
+
+Let's walk through the entire pipeline with inline comments. We will load one of the bundled sample novels, split it into sentences, score each sentence with the Syuzhet dictionary, smooth the series, and plot the resulting narrative arc.
+
+```{python}
+from moodswing import (
+    DictionarySentimentAnalyzer,
+    Sentencizer,
+    DCTTransform,
+    prepare_trajectory,
+    plot_trajectory,
+)
+from moodswing.data import load_sample_text
+
+# Load one of the packaged novels. Specify an id (e.g., "madame_bovary") or
+# leave it blank to grab whichever sample is listed first.
+doc_id, text = load_sample_text("madame_bovary")
+print(f"Analyzing sample text: {doc_id}")
+
+# 1. Break the novel into sentences; Punkt (via NLTK) handles abbreviations.
+sentences = Sentencizer().split(text)
+
+# 2. Score each sentence with the Syuzhet dictionary (positive vs. negative words).
+analyzer = DictionarySentimentAnalyzer()
+scores = analyzer.sentence_scores(sentences, method="syuzhet")
+
+# 3. Smooth the jagged series so the overall emotional arc is easy to read.
+trajectory = prepare_trajectory(
+    scores,
+    rolling_window=max(3, int(len(scores) * 0.1)),
+    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=True),
+)
+
+# 4. Plot the three lines: raw (grey), rolling average (blue), DCT curve (red).
+plot_trajectory(trajectory, title="Sample Narrative Arc");
+```
+
+## Switch to spaCy sentiment
+
+Prefer a neural model? Swap the analyzer—everything else stays the same because spaCy still returns one score per sentence.
+
+```{python}
+from moodswing import SpaCySentimentAnalyzer
+
+spacy_analyzer = SpaCySentimentAnalyzer(model="en_core_web_sm")
+spacy_scores = spacy_analyzer.text_scores(text)
+
+# Reuse the same smoothing + plotting steps from the quick start above.
+```
+
+::: {.callout-warning}
+## Processing speed
+
+Dictionary lookups finish quickly, even on a laptop. spaCy pipelines do more work (tagging, parsing, sometimes TextBlob sentiment), so give them a little patience or process books in batches.
+:::
+
+## Command-line helper
+
+Need PNGs without opening a notebook? Install the package and run:
+
+```bash
+moodswing-sample-plots --analyzer spacy
+```
+
+By default the command loads the bundled sample novels and writes PNGs into a `sample_plots/` folder. The CLI creates that directory automatically if it does not already exist.
+
+Pass `--input path/to/your_texts.pkl` to point at your own pickled list of `{doc_id, text}` records, and `--output some/folder` to change where the PNGs land. In notebooks, you can call `moodswing.cli.sample_plots.make_plot(..., output_dir=None)` to grab a live `matplotlib.figure.Figure` and display it inline instead of writing files.
+
+## Next steps
+
+- Continue to [Get started](get-started.qmd) for a detailed walkthrough with scholarly background and citations
+- Explore [Using sentiment lexicons](sentiment-lexicons.qmd) to understand the differences between Syuzhet, AFINN, Bing, and NRC dictionaries
+- Learn about [Using spaCy for sentiment](sentiment-spacy.qmd) for context-aware analysis with neural models
+- Read [Technical Notes](technical-notes.qmd) for implementation details, DCT mathematics, and R compatibility
+- Browse the [API reference](reference/index.qmd) for complete docstrings and parameter details

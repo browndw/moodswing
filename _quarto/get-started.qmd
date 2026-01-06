@@ -1,0 +1,253 @@
+---
+title: "Get started"
+jupyter: python3
+---
+
+This walkthrough demonstrates the complete workflow: loading a sample novel, splitting it into sentences, scoring each sentence, and plotting a smoothed sentiment trajectory that reveals the story's emotional arc.
+
+## Background: Why track sentiment over narrative time?
+
+Stories follow emotional patterns. As readers, we intuitively recognize rising tension, climactic moments, and resolutions. Computational sentiment analysis makes these patterns visible and measurable [@jockers2015syuzhet; @reagan2016emotional].
+
+By scoring the sentiment of each sentence in a novel and smoothing those scores, we can visualize the **narrative arc**—the trajectory of emotional valence from beginning to end. Research has shown that stories cluster around a small number of archetypal shapes [@reagan2016emotional], and that analyzing these arcs can reveal otherwise hidden structures in narrative [@elkins2025beyond; @hu2021dynamic].
+
+The **moodswing** package brings this approach to Python, implementing the same workflow as the R `syuzhet` package [@jockers2015syuzhet] while adding modern NLP options. This method has become widely used in digital humanities research [@rebora2023sentiment], particularly for analyzing large corpora where close reading alone would be impractical.
+
+::: {.callout-note}
+## For deeper background
+
+For a comprehensive discussion of sentiment analysis in literary studies, see @rebora2023sentiment and @elkins2022shapes. The original R implementation and its theoretical foundation are described in @jockers2015syuzhet.
+:::
+
+## Prerequisites
+
+Import the high-level helpers we'll use throughout this guide:
+
+```{python}
+from moodswing import (
+	DictionarySentimentAnalyzer,
+	Sentencizer,
+	DCTTransform,
+	prepare_trajectory,
+	plot_trajectory,
+)
+from moodswing.data import load_sample_text
+```
+
+## Loading a text
+
+The package bundles several public-domain novels for experimentation. Each helper returns a tuple of `(doc_id, text)`:
+
+```{python}
+doc_id, text = load_sample_text("madame_bovary")
+print(f"Loaded: {doc_id}")
+print(f"Length: {len(text):,} characters")
+```
+
+You can also load your own texts using `load_text_file()` or `load_text_directory()` (see the [API reference](reference/index.qmd) for details).
+
+## Splitting text into sentences
+
+Sentence-level analysis is the foundation of sentiment trajectories. The `Sentencizer` uses NLTK's Punkt tokenizer, which handles abbreviations, quotations, and other boundary ambiguities:
+
+```{python}
+sentencizer = Sentencizer()
+sentences = sentencizer.split(text)
+print(f"Total sentences: {len(sentences)}")
+print("\nFirst five sentences:")
+for i, sent in enumerate(sentences[:5], 1):
+    print(f"{i}. {sent[:70]}...")
+```
+
+## Scoring sentences
+
+`DictionarySentimentAnalyzer` evaluates each sentence by summing the sentiment values of its constituent words. We'll use the **Syuzhet** lexicon, which was designed specifically for narrative analysis [@jockers2015syuzhet]:
+
+```{python}
+analyzer = DictionarySentimentAnalyzer()
+scores = analyzer.sentence_scores(sentences, method="syuzhet")
+print(f"Score range: [{min(scores):.2f}, {max(scores):.2f}]")
+print(f"Mean score: {sum(scores)/len(scores):.3f}")
+print(f"\nFirst five scores: {scores[:5]}")
+```
+
+Each score represents the **emotional valence** of that sentence: positive numbers indicate pleasant or optimistic language, negative numbers indicate unpleasant or pessimistic language, and zero indicates neutral or absent sentiment words.
+
+::: {.callout-tip}
+## Try different lexicons
+
+The `method` parameter accepts `"syuzhet"` (default), `"afinn"`, `"bing"`, or `"nrc"`. Each lexicon has different characteristics. See [Using sentiment lexicons](sentiment-lexicons.qmd) for detailed comparisons.
+:::
+
+## Transforming the scores
+
+Raw sentence-by-sentence scores are noisy—individual words can spike the signal. We apply two smoothing operations to reveal the underlying emotional trajectory:
+
+1. **Rolling mean**: A moving average that reduces local noise
+2. **Discrete Cosine Transform (DCT)**: A spectral smoothing technique that emphasizes the overall shape
+
+Both are computed by `prepare_trajectory()`:
+
+```{python}
+#| warning: false
+trajectory = prepare_trajectory(
+	scores,
+	rolling_window=max(3, int(len(scores) * 0.1)),  # ~10% of sentences
+	dct_transform=DCTTransform(
+        low_pass_size=10,      # Keep only low-frequency components (note that a lower value like 5 will show less fluctuations)
+        output_length=200,     # Interpolate to 200 points for plotting
+        scale_range=True       # Normalize to [-1, 1]
+    ),
+)
+print(trajectory)
+```
+
+The `TrajectoryComponents` object holds three arrays:
+- `raw`: Original normalized scores
+- `rolling`: Rolling-mean smoothed scores  
+- `dct`: DCT smoothed scores (the "narrative arc")
+
+## Plotting a sentiment trajectory
+
+Visualize all three curves together to see how smoothing reveals narrative structure:
+
+```{python}
+#| fig-cap: "Sentiment trajectory showing raw scores (gray), rolling mean (blue), and DCT smooth (red)"
+plot_trajectory(trajectory, title=f"{doc_id} Sentiment Trajectory")
+```
+
+**Interpreting the plot:**
+
+- **Gray dots/line** (raw): Noisy sentence-level scores
+- **Blue line** (rolling mean): Medium-term emotional trends
+- **Red line** (DCT smooth): The overall narrative arc—the "shape" of the story
+
+The DCT curve reveals the story's broad emotional structure. In many narratives, you'll see classic patterns: a gradual rise to a climactic peak, followed by a fall or resolution [@reagan2016emotional].
+
+## Working with DataFrames
+
+For custom analysis and visualization, you can convert trajectory data to a pandas DataFrame. This enables advanced plotting, statistical analysis, and data export:
+
+::: {.callout-note}
+## pandas required
+
+The `trajectory_to_dataframe()` function requires pandas, which is installed automatically as a dependency when you install moodswing. If you're working in a minimal environment, ensure pandas is available:
+
+```bash
+pip install pandas
+```
+:::
+
+```{python}
+from moodswing import trajectory_to_dataframe
+import pandas as pd
+
+# Convert to tidy long-format DataFrame
+df = trajectory_to_dataframe(trajectory)
+print(df.head(10))
+print(f"\nDataFrame shape: {df.shape}")
+print(f"Components: {df['component'].unique()}")
+```
+
+### Custom plotting
+
+With the DataFrame, you have full control over visualization. For example, plot only the smoothed components with custom styling:
+
+```{python}
+#| fig-cap: "Custom plot showing only DCT and rolling mean trajectories"
+import matplotlib.pyplot as plt
+
+# Filter to smoothed components only
+df_smooth = df[df['component'].isin(['rolling', 'dct'])]
+
+# Create custom plot
+fig, ax = plt.subplots(figsize=(10, 4), dpi=150)
+for component in ['rolling', 'dct']:
+    data = df_smooth[df_smooth['component'] == component]
+    ax.plot(
+        data['position'], 
+        data['value'],
+        label=component.title(),
+        linewidth=2 if component == 'dct' else 1.5
+    )
+
+ax.axhline(0, color='black', linewidth=0.5, linestyle='--', alpha=0.3)
+ax.set_xlabel('Narrative Position', fontsize=11)
+ax.set_ylabel('Sentiment', fontsize=11)
+ax.set_title(f'{doc_id}: Smoothed Emotional Arc', fontsize=13)
+ax.legend(frameon=False)
+ax.grid(True, alpha=0.2)
+plt.tight_layout()
+plt.show()
+```
+
+### Statistical analysis
+
+The DataFrame format makes it easy to compute statistics or filter specific regions:
+
+```{python}
+# Summary statistics by component
+print(df.groupby('component')['value'].describe())
+
+# Find the emotional peak (highest DCT value)
+dct_data = df[df['component'] == 'dct']
+peak_idx = dct_data['value'].idxmax()
+peak = dct_data.loc[peak_idx]
+print(f"\nEmotional peak: {peak['value']:.3f} at position {peak['position']:.2f}")
+```
+
+### Exporting data
+
+Export the trajectory data for use in other tools or for archival purposes:
+
+```{python}
+#| eval: false
+
+# Save to CSV
+df.to_csv('madame_bovary_trajectory.csv', index=False)
+print("Exported to madame_bovary_trajectory.csv")
+
+# Or save as Excel with multiple sheets
+with pd.ExcelWriter('sentiment_analysis.xlsx') as writer:
+    df.to_excel(writer, sheet_name='trajectory', index=False)
+    pd.DataFrame({'sentence': sentences, 'score': scores}).to_excel(
+        writer, sheet_name='raw_scores', index=False
+    )
+```
+
+::: {.callout-tip}
+## Using seaborn or plotly
+
+The tidy DataFrame format works seamlessly with modern plotting libraries:
+
+```python
+import seaborn as sns
+sns.lineplot(data=df, x='position', y='value', hue='component')
+```
+
+Or for interactive plots:
+
+```python
+import plotly.express as px
+fig = px.line(df, x='position', y='value', color='component')
+fig.show()
+```
+:::
+
+## What's next?
+
+This basic workflow can be extended in many ways:
+
+- **Compare lexicons**: Try `method="bing"` or `method="afinn"` to see how different dictionaries reveal different patterns
+- **Use spaCy**: For context-aware sentiment that handles negation, see [Using spaCy for sentiment](sentiment-spacy.qmd)
+- **Analyze emotions**: Use the NRC lexicon to track specific emotions (fear, joy, anger) rather than just overall valence
+- **Process multiple texts**: Use `load_text_directory()` to batch-process an entire corpus
+
+For detailed exploration of these techniques, continue to the specialized guides in the navigation bar.
+
+## References
+
+::: {#refs}
+:::
+
+

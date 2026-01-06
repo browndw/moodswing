@@ -1,0 +1,61 @@
+# prepare_trajectory { #moodswing.viz.prepare_trajectory }
+
+```python
+viz.prepare_trajectory(
+    values,
+    *,
+    rolling_window=None,
+    dct_transform=None,
+    normalize='range',
+)
+```
+
+Compute optional smoothing passes for a sentiment signal.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name           | Type                    | Description                                                                                                                                                                                                   | Default    |
+|----------------|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| values         | Sequence\[float\]       | Sentiment scores ordered along the narrative timeline.                                                                                                                                                        | _required_ |
+| rolling_window | int                     | Window length for :func:`rolling_mean`. When ``None``, skip.                                                                                                                                                  | `None`     |
+| dct_transform  | DCTTransform            | Transformer that applies DCT smoothing. When ``None``, skip. If the transform already has ``scale_range=True`` or ``scale_values=True``, the DCT output will not be normalized again to avoid double-scaling. | `None`     |
+| normalize      | (\'range\', \'zscore\') | Apply scaling to each returned series. ``"range"`` (default) rescales to ``[-1, 1]`` while ``"zscore"`` standardizes to zero mean and unit variance. Set to ``None`` to leave values untouched.               | `"range"`  |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                 | Description                                                    |
+|--------|----------------------|----------------------------------------------------------------|
+|        | TrajectoryComponents | Container with raw values and any requested smoothing outputs. |
+
+## Warnings {.doc-section .doc-section-warnings}
+
+If both ``normalize`` and ``dct_transform`` with internal scaling are
+provided, the DCT output is not normalized to prevent double-scaling.
+A warning is issued to alert the user.
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> from moodswing import prepare_trajectory, DCTTransform
+>>>
+>>> # Basic usage with defaults
+>>> trajectory = prepare_trajectory(
+...     scores,
+...     rolling_window=50,
+...     dct_transform=DCTTransform(low_pass_size=10)
+... )
+>>>
+>>> # Without normalization (preserve original scale)
+>>> trajectory = prepare_trajectory(
+...     scores,
+...     dct_transform=DCTTransform(low_pass_size=5),
+...     normalize=None
+... )
+>>>
+>>> # Z-score normalization for statistical comparison
+>>> trajectory = prepare_trajectory(
+...     scores,
+...     rolling_window=30,
+...     normalize="zscore"
+... )
+```

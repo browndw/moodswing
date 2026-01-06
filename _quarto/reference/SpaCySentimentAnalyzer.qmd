@@ -1,0 +1,89 @@
+# SpaCySentimentAnalyzer { #moodswing.sentiment.SpaCySentimentAnalyzer }
+
+```python
+sentiment.SpaCySentimentAnalyzer(
+    nlp=None,
+    model='en_core_web_sm',
+    positive_label='POSITIVE',
+    negative_label='NEGATIVE',
+    scorer=None,
+    strip_whitespace=True,
+    drop_empty=True,
+)
+```
+
+Derive per-sentence sentiment values from a spaCy pipeline.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name             | Type     | Description                                                                                                                                                            | Default            |
+|------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|
+| nlp              | Language | Pre-loaded spaCy pipeline. If provided, the ``model`` parameter is ignored.                                                                                            | `None`             |
+| model            | str      | Name of a spaCy model to load (e.g., ``"en_core_web_sm"``) or path to a local model directory. Defaults to ``"en_core_web_sm"``. Only used if ``nlp`` is not provided. | `'en_core_web_sm'` |
+| positive_label   | str      | Label to use for positive sentiment when extracting from ``doc.cats``. Defaults to ``"POSITIVE"``.                                                                     | `'POSITIVE'`       |
+| negative_label   | str      | Label to use for negative sentiment when extracting from ``doc.cats``. Defaults to ``"NEGATIVE"``.                                                                     | `'NEGATIVE'`       |
+| scorer           | callable | Custom scoring function that takes a spaCy ``Doc`` and returns a float sentiment score. If provided, overrides default sentiment extraction.                           | `None`             |
+| strip_whitespace | bool     | Remove leading/trailing whitespace from sentences.                                                                                                                     | `True`             |
+| drop_empty       | bool     | Omit empty sentences from processing.                                                                                                                                  | `True`             |
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> # Use a model name
+>>> analyzer = SpaCySentimentAnalyzer(model="en_core_web_sm")
+>>>
+>>> # Use a local model path
+>>> analyzer = SpaCySentimentAnalyzer(model="/path/to/my_model")
+>>>
+>>> # Use a pre-loaded pipeline
+>>> import spacy
+>>> nlp = spacy.load("en_core_web_lg")
+>>> analyzer = SpaCySentimentAnalyzer(nlp=nlp)
+```
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [sentence_scores](#moodswing.sentiment.SpaCySentimentAnalyzer.sentence_scores) | Score a pre-tokenized list of sentences using spaCy. |
+| [text_scores](#moodswing.sentiment.SpaCySentimentAnalyzer.text_scores) | Split raw text into sentences and score each one. |
+
+### sentence_scores { #moodswing.sentiment.SpaCySentimentAnalyzer.sentence_scores }
+
+```python
+sentiment.SpaCySentimentAnalyzer.sentence_scores(sentences)
+```
+
+Score a pre-tokenized list of sentences using spaCy.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name      | Type            | Description                                   | Default    |
+|-----------|-----------------|-----------------------------------------------|------------|
+| sentences | Sequence\[str\] | Sentences to feed through the spaCy pipeline. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                       |
+|--------|---------------|-----------------------------------|
+|        | list\[float\] | One sentiment score per sentence. |
+
+### text_scores { #moodswing.sentiment.SpaCySentimentAnalyzer.text_scores }
+
+```python
+sentiment.SpaCySentimentAnalyzer.text_scores(text)
+```
+
+Split raw text into sentences and score each one.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                   | Description                                       | Default    |
+|--------|------------------------|---------------------------------------------------|------------|
+| text   | str \| Sequence\[str\] | Full document or iterable of segments to analyze. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                            |
+|--------|---------------|----------------------------------------|
+|        | list\[float\] | Sentiment score per detected sentence. |

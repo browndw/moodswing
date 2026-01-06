@@ -1,0 +1,15 @@
+# TrajectoryComponents { #moodswing.TrajectoryComponents }
+
+```python
+TrajectoryComponents(raw, rolling, dct)
+```
+
+Container holding raw and smoothed signals.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                  | Description                                                  | Default    |
+|---------|-----------------------|--------------------------------------------------------------|------------|
+| raw     | numpy.ndarray         | Base sentiment signal (typically per sentence or paragraph). | _required_ |
+| rolling | numpy.ndarray \| None | Optional rolling-average smoothing of ``raw``.               | _required_ |
+| dct     | numpy.ndarray \| None | Optional discrete cosine transform smoothing of ``raw``.     | _required_ |

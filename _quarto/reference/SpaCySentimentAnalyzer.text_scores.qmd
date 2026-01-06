@@ -1,0 +1,19 @@
+# SpaCySentimentAnalyzer.text_scores { #moodswing.sentiment.SpaCySentimentAnalyzer.text_scores }
+
+```python
+sentiment.SpaCySentimentAnalyzer.text_scores(text)
+```
+
+Split raw text into sentences and score each one.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                   | Description                                       | Default    |
+|--------|------------------------|---------------------------------------------------|------------|
+| text   | str \| Sequence\[str\] | Full document or iterable of segments to analyze. | _required_ |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                            |
+|--------|---------------|----------------------------------------|
+|        | list\[float\] | Sentiment score per detected sentence. |

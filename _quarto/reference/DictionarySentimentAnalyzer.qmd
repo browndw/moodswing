@@ -1,0 +1,165 @@
+# DictionarySentimentAnalyzer { #moodswing.sentiment.DictionarySentimentAnalyzer }
+
+```python
+sentiment.DictionarySentimentAnalyzer(
+    loader=LexiconLoader(),
+    tokenizer=Tokenizer(),
+    sentencizer=Sentencizer(),
+)
+```
+
+Sentence-level sentiment scoring built on dictionary lookups.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [mixed_messages](#moodswing.sentiment.DictionarySentimentAnalyzer.mixed_messages) | Compute Shannon entropy to quantify mixed sentiment signals. |
+| [nrc_emotions](#moodswing.sentiment.DictionarySentimentAnalyzer.nrc_emotions) | Aggregate NRC-style emotion counts for each sentence. |
+| [sentence_scores](#moodswing.sentiment.DictionarySentimentAnalyzer.sentence_scores) | Return one sentiment score per sentence. |
+| [text_scores](#moodswing.sentiment.DictionarySentimentAnalyzer.text_scores) | Split full text into sentences and score each one. |
+
+### mixed_messages { #moodswing.sentiment.DictionarySentimentAnalyzer.mixed_messages }
+
+```python
+sentiment.DictionarySentimentAnalyzer.mixed_messages(
+    text,
+    *,
+    method=_DEFAULT_METHOD,
+    drop_neutral=True,
+)
+```
+
+Compute Shannon entropy to quantify mixed sentiment signals.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type                   | Description                                                                       | Default           |
+|--------------|------------------------|-----------------------------------------------------------------------------------|-------------------|
+| text         | str \| Sequence\[str\] | Document (or sequence of segments) to analyze.                                    | _required_        |
+| method       | str                    | Lexicon name to use when determining positive/negative tokens.                    | `_DEFAULT_METHOD` |
+| drop_neutral | bool                   | When ``True`` (default), neutral words are excluded from the entropy calculation. | `True`            |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type               | Description                                                                                                                                                                           |
+|--------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|        | MixedMessageResult | Named result containing ``entropy`` (Shannon entropy over positive/negative distribution) and ``normalized_entropy`` (entropy divided by token count for length-independent measure). |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> analyzer = DictionarySentimentAnalyzer()
+>>> result = analyzer.mixed_messages("I love it but I hate it.")
+>>> result.entropy  # Higher values indicate more mixing
+>>> result.normalized_entropy  # Length-normalized version
+```
+
+### nrc_emotions { #moodswing.sentiment.DictionarySentimentAnalyzer.nrc_emotions }
+
+```python
+sentiment.DictionarySentimentAnalyzer.nrc_emotions(
+    sentences,
+    *,
+    language='english',
+    lexicon=None,
+    categories=None,
+)
+```
+
+Aggregate NRC-style emotion counts for each sentence.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name       | Type            | Description                                        | Default     |
+|------------|-----------------|----------------------------------------------------|-------------|
+| sentences  | Sequence\[str\] | Sentences to analyze.                              | _required_  |
+| language   | str             | Language tag for loading NRC variants.             | `'english'` |
+| lexicon    | EmotionLexicon  | Specific NRC emotion lexicon to reuse.             | `None`      |
+| categories | Iterable\[str\] | Restrict the output to a subset of emotion labels. | `None`      |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                       | Description                                                    |
+|--------|----------------------------|----------------------------------------------------------------|
+|        | list\[dict\[str, float\]\] | Per-sentence mappings from emotion label to aggregated weight. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> from moodswing import DictionarySentimentAnalyzer
+>>> import pandas as pd
+>>>
+>>> analyzer = DictionarySentimentAnalyzer()
+>>> sentences = ["I love sunny days!", "The storm was terrifying."]
+>>> emotions = analyzer.nrc_emotions(sentences)
+>>>
+>>> # Convert to DataFrame for easy viewing
+>>> df = pd.DataFrame(emotions)
+>>> print(df[['joy', 'fear', 'positive', 'negative']])
+>>>
+>>> # Analyze only specific emotions
+>>> fear_joy = analyzer.nrc_emotions(
+...     sentences,
+...     categories=['fear', 'joy']
+... )
+>>> df_fear_joy = pd.DataFrame(fear_joy)
+```
+
+### sentence_scores { #moodswing.sentiment.DictionarySentimentAnalyzer.sentence_scores }
+
+```python
+sentiment.DictionarySentimentAnalyzer.sentence_scores(
+    sentences,
+    *,
+    method=_DEFAULT_METHOD,
+    language='english',
+    lexicon=None,
+)
+```
+
+Return one sentiment score per sentence.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name      | Type             | Description                                                                                                  | Default           |
+|-----------|------------------|--------------------------------------------------------------------------------------------------------------|-------------------|
+| sentences | Sequence\[str\]  | Sentences that have already been split from the source text.                                                 | _required_        |
+| method    | str              | Name of the dictionary lexicon to use (``syuzhet``, ``bing``, etc.).                                         | `_DEFAULT_METHOD` |
+| language  | str              | Language tag used when loading multilingual lexicons such as NRC.                                            | `'english'`       |
+| lexicon   | SentimentLexicon | Preloaded lexicon. Provide this when you want to reuse the same instance across multiple calls to avoid I/O. | `None`            |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                                          |
+|--------|---------------|------------------------------------------------------|
+|        | list\[float\] | One numeric sentiment score for each input sentence. |
+
+### text_scores { #moodswing.sentiment.DictionarySentimentAnalyzer.text_scores }
+
+```python
+sentiment.DictionarySentimentAnalyzer.text_scores(
+    text,
+    *,
+    method=_DEFAULT_METHOD,
+    language='english',
+    lexicon=None,
+)
+```
+
+Split full text into sentences and score each one.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                   | Description                                                                                     | Default           |
+|----------|------------------------|-------------------------------------------------------------------------------------------------|-------------------|
+| text     | str \| Sequence\[str\] | Either a single string (the full document) or an iterable of pre-separated paragraphs/segments. | _required_        |
+| method   | str                    | Lexicon name passed to :func:`sentence_scores`.                                                 | `_DEFAULT_METHOD` |
+| language | str                    | Language tag used when loading the lexicon.                                                     | `'english'`       |
+| lexicon  | SentimentLexicon       | Preloaded lexicon that overrides the automatic loader.                                          | `None`            |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                            |
+|--------|---------------|----------------------------------------|
+|        | list\[float\] | Sentiment score per detected sentence. |

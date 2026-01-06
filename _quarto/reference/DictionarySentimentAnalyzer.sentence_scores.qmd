@@ -1,0 +1,28 @@
+# DictionarySentimentAnalyzer.sentence_scores { #moodswing.sentiment.DictionarySentimentAnalyzer.sentence_scores }
+
+```python
+sentiment.DictionarySentimentAnalyzer.sentence_scores(
+    sentences,
+    *,
+    method=_DEFAULT_METHOD,
+    language='english',
+    lexicon=None,
+)
+```
+
+Return one sentiment score per sentence.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name      | Type             | Description                                                                                                  | Default           |
+|-----------|------------------|--------------------------------------------------------------------------------------------------------------|-------------------|
+| sentences | Sequence\[str\]  | Sentences that have already been split from the source text.                                                 | _required_        |
+| method    | str              | Name of the dictionary lexicon to use (``syuzhet``, ``bing``, etc.).                                         | `_DEFAULT_METHOD` |
+| language  | str              | Language tag used when loading multilingual lexicons such as NRC.                                            | `'english'`       |
+| lexicon   | SentimentLexicon | Preloaded lexicon. Provide this when you want to reuse the same instance across multiple calls to avoid I/O. | `None`            |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                                          |
+|--------|---------------|------------------------------------------------------|
+|        | list\[float\] | One numeric sentiment score for each input sentence. |

@@ -1,0 +1,37 @@
+# load_sample_text { #moodswing.data.load_sample_text }
+
+```python
+data.load_sample_text(doc_id=None, *, filename=_DEFAULT_SAMPLE)
+```
+
+Return a single ``(doc_id, text)`` pair from the bundled sample corpus.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type   | Description                                                                      | Default           |
+|----------|--------|----------------------------------------------------------------------------------|-------------------|
+| doc_id   | str    | Specific document ID to retrieve. If ``None``, returns the first available text. | `None`            |
+| filename | str    | Name of the pickled corpus file to load.                                         | `_DEFAULT_SAMPLE` |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type              | Description                   |
+|--------|-------------------|-------------------------------|
+|        | tuple\[str, str\] | Document ID and text content. |
+
+## Raises {.doc-section .doc-section-raises}
+
+| Name   | Type         | Description                                             |
+|--------|--------------|---------------------------------------------------------|
+|        | ValueError   | If the requested ``doc_id`` is not found in the corpus. |
+|        | RuntimeError | If the corpus is empty.                                 |
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> from moodswing.data import load_sample_text, list_sample_texts
+>>> # See what's available
+>>> print(list_sample_texts())
+>>> # Load a specific text
+>>> doc_id, text = load_sample_text("madame_bovary")
+```

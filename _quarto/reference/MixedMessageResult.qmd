@@ -1,0 +1,14 @@
+# MixedMessageResult { #moodswing.MixedMessageResult }
+
+```python
+MixedMessageResult(entropy, normalized_entropy)
+```
+
+Result from analyzing mixed sentiment signals.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name               | Type   | Description                                                                                                          |
+|--------------------|--------|----------------------------------------------------------------------------------------------------------------------|
+| entropy            | float  | Shannon entropy over positive/negative token distribution. Higher values indicate more mixed or ambiguous sentiment. |
+| normalized_entropy | float  | Entropy normalized by the total number of tokens, providing a length-independent measure of sentiment mixing.        |

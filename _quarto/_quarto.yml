@@ -1,0 +1,95 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "moodswing"
+  description: "Track changes in sentiment over narrative time."
+  page-navigation: true
+  favicon: "favicon.ico"
+  navbar:
+    background: light
+    pinned: true
+    logo: logo.png
+    left:
+      - text: "Get started"
+        file: get-started.qmd
+      - text: "Using sentiment lexicons"
+        file: sentiment-lexicons.qmd
+      - text: "Using spaCy for sentiment"
+        file: sentiment-spacy.qmd
+      - text: Reference
+        menu: 
+          - text: "Technical Notes"
+            file: technical-notes.qmd
+          - text: "Reference"
+            file: reference/index.qmd
+      - text: Visualizations
+        menu: 
+          - text: "Visualization Guide"
+            file: visualization-guide.qmd
+          - text: "Examples Gallery"
+            file: examples-gallery.qmd
+      - text: Learn more
+        menu:
+          - text: "Sentiment analysis with suyzhet"
+            href: https://programminghistorian.org/en/lessons/sentiment-analysis-syuzhet
+            target: _blank
+          - text: "Critique of suyzhet"
+            href: https://perma.cc/TYT3-5DTU
+            target: _blank
+    right:
+      - icon: github
+        href: https://github.com/browndw/moodswing
+        aria-label: moodswing on GitHub
+
+bibliography: references.bib
+
+format:
+  html:
+    sidebar: false
+
+quartodoc:
+  title: Reference
+  package: moodswing
+  sections:
+    - title: Loading Text
+      desc: "Utilities for getting raw text into the workflow."
+      package: moodswing.data
+      contents:
+        - load_sample_text
+        - list_sample_texts
+        - load_text_file
+    - title: Sentiment Analyzers
+      desc: "Dictionary and spaCy-based sentiment scoring interfaces."
+      package: moodswing.sentiment
+      contents:
+        - DictionarySentimentAnalyzer
+        - SpaCySentimentAnalyzer
+        - DictionarySentimentAnalyzer.sentence_scores
+        - SpaCySentimentAnalyzer.text_scores
+    - title: Data Types
+      desc: "Result containers and data structures."
+      package: moodswing
+      contents:
+        - MixedMessageResult
+        - TrajectoryComponents
+    - title: Trajectory Tools
+      desc: "Transform helpers for plotting narrative sentiment curves."
+      package: moodswing.transforms
+      contents:
+        - DCTTransform
+        - rolling_mean
+    - title: Visualization
+      desc: "High-level helpers for preparing and plotting trajectories."
+      package: moodswing.viz
+      contents:
+        - prepare_trajectory
+        - plot_trajectory
+        - trajectory_to_dataframe
+
+filters:
+  - interlinks
+
+interlinks:
+  sources: {}

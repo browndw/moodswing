@@ -1,0 +1,28 @@
+# list_sample_texts { #moodswing.data.list_sample_texts }
+
+```python
+data.list_sample_texts(filename=_DEFAULT_SAMPLE)
+```
+
+Return a list of available document IDs from the bundled sample corpus.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type   | Description                               | Default           |
+|----------|--------|-------------------------------------------|-------------------|
+| filename | str    | Name of the pickled corpus file to query. | `_DEFAULT_SAMPLE` |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type        | Description                                 |
+|--------|-------------|---------------------------------------------|
+|        | list\[str\] | Document IDs of all available sample texts. |
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> from moodswing.data import list_sample_texts
+>>> available = list_sample_texts()
+>>> print(available)
+['madame_bovary', 'portrait_of_the_artist', ...]
+```

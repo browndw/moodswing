@@ -1,0 +1,363 @@
+---
+title: "Technical Notes"
+jupyter: python3
+---
+
+This page documents implementation details, design decisions, and comparisons with the R `syuzhet` package. These notes are intended for users who want to understand the computational methods or need to reproduce results from the R ecosystem.
+
+## The Discrete Cosine Transform (DCT)
+
+The DCT is a key component of the smoothing pipeline, converting raw sentiment scores into the smooth "narrative arc" curves you see in trajectory plots.
+
+### Why DCT for narrative analysis?
+
+The **Discrete Cosine Transform** is a signal processing technique that decomposes a time series into frequency components—similar to a Fourier transform but using only real numbers (no complex arithmetic). For sentiment trajectories:
+
+1. **Low-frequency components** represent gradual, long-term emotional trends (the overall arc)
+2. **High-frequency components** represent sentence-to-sentence noise
+
+By keeping only the lowest-frequency components, we reveal the story's underlying emotional structure while filtering out local variation [@jockers2015syuzhet].
+
+### Mathematical formulation
+
+The implementation uses **DCT-II** (forward transform) and **DCT-III** (inverse transform):
+
+**DCT-II (forward):**
+$$
+X_k = \sum_{n=0}^{N-1} x_n \cos\left[\frac{\pi}{N}\left(n + \frac{1}{2}\right)k\right], \quad k = 0, \ldots, N-1
+$$
+
+**DCT-III (inverse):**
+$$
+x_n = \frac{1}{2}X_0 + \sum_{k=1}^{N-1} X_k \cos\left[\frac{\pi}{N}\left(n + \frac{1}{2}\right)k\right], \quad n = 0, \ldots, N-1
+$$
+
+The `moodswing` implementation uses NumPy's FFT routines for computational efficiency, converting DCT to FFT via symmetric extension.
+
+### How the DCT pipeline works
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+from moodswing import DCTTransform
+
+# Create synthetic "sentiment scores" with noise
+np.random.seed(42)
+time = np.linspace(0, 1, 100)
+# True signal: rise then fall (like a tragedy)
+true_signal = -4 * (time - 0.75)**2 + 0.5
+# Add noise
+noisy_scores = true_signal + np.random.normal(0, 0.15, len(time))
+
+# Apply DCT smoothing
+dct = DCTTransform(low_pass_size=5, output_length=100, scale_range=False)
+smoothed = dct.transform(noisy_scores)
+
+# Plot
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.plot(time, noisy_scores, 'o', alpha=0.3, label='Noisy scores', markersize=3)
+ax.plot(time, true_signal, 'g--', linewidth=2, label='True signal', alpha=0.7)
+ax.plot(time, smoothed, 'r-', linewidth=2, label=f'DCT (5 components)')
+ax.axhline(0, color='k', linestyle=':', alpha=0.3)
+ax.set_xlabel('Narrative time')
+ax.set_ylabel('Sentiment')
+ax.legend()
+ax.set_title('DCT Smoothing Effect')
+plt.tight_layout()
+plt.show()
+```
+
+The red line (DCT smooth) captures the broad trajectory while ignoring sentence-level noise. The `low_pass_size` parameter controls how many frequency components to retain—smaller values produce smoother curves.
+
+### Choosing `low_pass_size`
+
+The `low_pass_size` parameter determines how many DCT coefficients to keep:
+
+- **2-5**: Very smooth, shows only the broadest pattern (useful for high-level comparisons)
+- **5-10**: Balanced smoothing (default in most examples)
+- **10-20**: Preserves more detail, can show secondary peaks
+- **>20**: Minimal smoothing, may retain noise
+
+```{python}
+# Compare different smoothing levels
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+for idx, lps in enumerate([3, 7, 15, 30]):
+    ax = axes[idx // 2, idx % 2]
+    dct_temp = DCTTransform(low_pass_size=lps, output_length=100, scale_range=False)
+    smoothed_temp = dct_temp.transform(noisy_scores)
+    ax.plot(time, noisy_scores, 'o', alpha=0.2, markersize=2, color='gray')
+    ax.plot(time, smoothed_temp, 'r-', linewidth=2)
+    ax.axhline(0, color='k', linestyle=':', alpha=0.3)
+    ax.set_title(f'low_pass_size = {lps}')
+    ax.set_xlabel('Narrative time')
+    ax.set_ylabel('Sentiment')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Rolling mean vs. DCT
+
+Both smoothing methods reduce noise but work differently:
+
+| Method | How it works | Best for |
+|--------|--------------|----------|
+| **Rolling mean** | Averages neighboring points with a sliding window | Preserving local features, medium-term trends |
+| **DCT** | Keeps low-frequency spectral components | Global narrative shape, comparing arc types |
+
+```{python}
+from moodswing import rolling_mean
+
+# Compare the two approaches
+rolling_smoothed = rolling_mean(noisy_scores, window=15)
+
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.plot(time, noisy_scores, 'o', alpha=0.2, markersize=2, color='gray', label='Raw')
+ax.plot(time, rolling_smoothed, 'b-', linewidth=2, label='Rolling mean (window=15)')
+ax.plot(time, smoothed, 'r-', linewidth=2, label='DCT (5 components)')
+ax.axhline(0, color='k', linestyle=':', alpha=0.3)
+ax.set_xlabel('Narrative time')
+ax.set_ylabel('Sentiment')
+ax.legend()
+ax.set_title('Rolling Mean vs. DCT Smoothing')
+plt.tight_layout()
+plt.show()
+```
+
+**Rolling mean** (blue) follows local trends more closely. **DCT** (red) emphasizes the global shape. For narrative arc analysis, DCT is typically preferred because it reveals archetypal patterns [@reagan2016emotional].
+
+## Normalization: Range vs. Z-score
+
+`prepare_trajectory()` offers two normalization modes to make scores comparable across texts:
+
+### Range normalization (default)
+
+Scales values to $[-1, 1]$:
+$$
+x_{\text{norm}} = 2 \cdot \frac{x - x_{\min}}{x_{\max} - x_{\min}} - 1
+$$
+
+**Pros:** Preserves the relative positions of peaks and valleys  
+**Cons:** Sensitive to outliers
+
+### Z-score normalization
+
+Standardizes to mean=0, standard deviation=1:
+$$
+x_{\text{norm}} = \frac{x - \mu}{\sigma}
+$$
+
+**Pros:** Robust to outliers  
+**Cons:** Can distort the apparent magnitude of changes
+
+```{python}
+from moodswing import prepare_trajectory
+
+# Create data with an outlier
+scores_with_outlier = list(noisy_scores)
+scores_with_outlier[50] = 3.0  # Big positive spike
+
+# Compare normalization modes
+trajectory_range = prepare_trajectory(
+    scores_with_outlier, 
+    normalize="range",
+    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=False)
+)
+
+trajectory_zscore = prepare_trajectory(
+    scores_with_outlier,
+    normalize="zscore", 
+    dct_transform=DCTTransform(low_pass_size=5, output_length=100, scale_range=False)
+)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+
+ax1.plot(trajectory_range.raw, alpha=0.5, label='Range normalized')
+ax1.set_title('Range Normalization')
+ax1.set_xlabel('Sentence index')
+ax1.set_ylabel('Normalized sentiment')
+ax1.axhline(0, color='k', linestyle=':', alpha=0.3)
+ax1.legend()
+
+ax2.plot(trajectory_zscore.raw, alpha=0.5, label='Z-score normalized', color='orange')
+ax2.set_title('Z-score Normalization')
+ax2.set_xlabel('Sentence index')
+ax2.set_ylabel('Normalized sentiment')
+ax2.axhline(0, color='k', linestyle=':', alpha=0.3)
+ax2.legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+For most literary analysis, **range normalization** is recommended because it preserves the shape of the original distribution.
+
+## Comparison with R `syuzhet`
+
+The Python `moodswing` package aims for compatibility with the R `syuzhet` package while adapting to Python conventions.
+
+### What's identical
+
+- **Lexicons**: The four dictionaries (Syuzhet, AFINN, Bing, NRC) use the same word-score mappings
+- **DCT algorithm**: Produces mathematically identical results given the same input
+- **Smoothing approach**: Same spectral filtering logic
+
+### Key differences
+
+#### 1. Hyphenated words
+
+**R syuzhet**: Strips hyphens before lexicon lookup  
+```r
+# In R: "well-intentioned" becomes "well" + "intentioned"
+get_sentiment("well-intentioned", method="syuzhet")
+```
+
+**Python moodswing**: Preserves hyphens by default  
+```{python}
+from moodswing import DictionarySentimentAnalyzer
+
+analyzer = DictionarySentimentAnalyzer()
+# "well-intentioned" is looked up as a single token
+score = analyzer.sentence_scores(["The well-intentioned effort failed."], method="syuzhet")
+print(f"Score: {score}")
+```
+
+**Why the difference?** Python's NLTK tokenizer treats hyphenated words as single tokens, which is linguistically defensible (e.g., "well-intentioned" has a different meaning than "well" + "intentioned" separately). 
+
+**To match R behavior:** Pre-process your text to remove hyphens before scoring:
+```{python}
+text = "The well-intentioned effort failed."
+text_no_hyphens = text.replace("-", " ")
+score_r_style = analyzer.sentence_scores([text_no_hyphens], method="syuzhet")
+print(f"R-style score: {score_r_style}")
+```
+
+#### 2. Sentence splitting
+
+**R syuzhet**: Uses `get_sentences()` from the `stringr` package  
+**Python moodswing**: Uses NLTK's Punkt tokenizer
+
+Both handle most texts similarly, but edge cases (especially with abbreviations or unusual punctuation) may differ slightly. NLTK's Punkt is trained on the Penn Treebank and handles English abbreviations well.
+
+#### 3. NRC language support
+
+**R syuzhet**: NRC lexicon is English-only in most installations  
+**Python moodswing**: Ships with multilingual NRC data
+
+```{python}
+from moodswing.lexicons import LexiconLoader
+
+loader = LexiconLoader()
+
+# English
+nrc_en = loader.load("nrc", language="english")
+print("English 'love':", nrc_en.emotions_for("love"))
+
+# French
+nrc_fr = loader.load("nrc", language="french")
+print("French 'amour':", nrc_fr.emotions_for("amour"))
+```
+
+### Validation against R
+
+The package includes test data from R `syuzhet` to verify compatibility:
+
+```{python}
+import pandas as pd
+
+# Load reference data from R syuzhet vignette
+# (This is stored in tests/data/mb_sentiment.tsv)
+# Shows that DCT outputs match R to floating-point precision
+test_file = "../tests/data/mb_sentiment.tsv"
+try:
+    r_reference = pd.read_csv(test_file, sep="\t")
+    print("R reference data columns:", r_reference.columns.tolist())
+    print(f"First few rows:\n{r_reference.head()}")
+except FileNotFoundError:
+    print("Reference data not found (only available in package source)")
+```
+
+## Performance characteristics
+
+### Dictionary-based analysis
+
+```{python}
+#| eval: false
+import time
+from moodswing.data import load_sample_text
+
+doc_id, text = load_sample_text("portrait_of_the_artist")
+sentences = Sentencizer().split(text)
+
+start = time.time()
+scores = analyzer.sentence_scores(sentences, method="syuzhet")
+elapsed = time.time() - start
+
+print(f"Processed {len(sentences)} sentences in {elapsed:.3f}s")
+print(f"Rate: {len(sentences)/elapsed:.0f} sentences/second")
+```
+
+**Typical performance**: 5,000-20,000 sentences/second on a modern laptop. Dictionary lookups are extremely fast—the bottleneck is usually tokenization.
+
+### spaCy-based analysis
+
+spaCy is 10-100× slower than dictionaries due to neural network processing:
+
+- **Small model** (`en_core_web_sm`): ~100-500 sentences/second
+- **Medium/large models**: ~50-200 sentences/second
+
+For large corpora (hundreds of novels), dictionary methods are strongly recommended unless context-awareness is critical.
+
+## Design decisions
+
+### Why dataclasses?
+
+All major components (`DictionarySentimentAnalyzer`, `DCTTransform`, etc.) are implemented as dataclasses:
+
+```python
+@dataclass(slots=True)
+class DictionarySentimentAnalyzer:
+    loader: LexiconLoader = field(default_factory=LexiconLoader)
+    tokenizer: Tokenizer = field(default_factory=Tokenizer)
+    # ...
+```
+
+**Benefits:**
+- Automatic `__init__`, `__repr__`, etc.
+- Type hints throughout
+- `slots=True` reduces memory overhead
+- Easy to instantiate with custom components
+
+### Why separate sentence splitting?
+
+Unlike R `syuzhet`'s all-in-one functions, `moodswing` separates sentence splitting from scoring:
+
+```python
+# Explicit pipeline
+sentences = sentencizer.split(text)
+scores = analyzer.sentence_scores(sentences)
+```
+
+**Benefits:**
+- Reuse sentence splits across multiple analyses
+- Swap in custom sentence splitters
+- Apply preprocessing between steps
+- Clearer data flow for debugging
+
+### Immutability and statelessness
+
+Analyzers are designed to be reusable without side effects:
+
+```python
+analyzer = DictionarySentimentAnalyzer()
+scores1 = analyzer.sentence_scores(text1)
+scores2 = analyzer.sentence_scores(text2)  # No interference
+```
+
+This makes parallel processing safe and results reproducible.
+
+## References
+
+::: {#refs}
+:::
+

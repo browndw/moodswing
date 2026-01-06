@@ -1,0 +1,42 @@
+# rolling_mean { #moodswing.transforms.rolling_mean }
+
+```python
+transforms.rolling_mean(values, window)
+```
+
+Compute a rolling (moving) average over a sequence of values.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type              | Description                                         | Default    |
+|--------|-------------------|-----------------------------------------------------|------------|
+| values | Iterable\[float\] | Input sequence to smooth.                           | _required_ |
+| window | int               | Number of points to average over. Must be positive. | _required_ |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                                      |
+|--------|---------------|--------------------------------------------------|
+|        | list\[float\] | Smoothed sequence with the same length as input. |
+
+## Notes {.doc-section .doc-section-notes}
+
+This function uses ``mode="same"`` convolution, which means:
+
+- Output has the same length as input
+- Edge values (first and last ``window//2`` points) are averaged
+  over fewer points than the window size, using only available data
+- This prevents shrinkage but means edges are less smoothed
+
+For example, with ``window=5``, the first point averages over just
+itself plus the next 2 points, while interior points average over
+5 points centered on the current position.
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+>>> smoothed = rolling_mean(scores, window=3)
+>>> # First value: avg of [1, 2] (only 2 points available)
+>>> # Fifth value: avg of [4, 5, 6] (full 3-point window)
+```

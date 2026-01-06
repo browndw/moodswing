@@ -1,0 +1,49 @@
+# plot_trajectory { #moodswing.viz.plot_trajectory }
+
+```python
+viz.plot_trajectory(
+    trajectory,
+    *,
+    title='Sentiment Trajectory',
+    legend_loc='upper right',
+    colors=None,
+    components=None,
+    ax=None,
+)
+```
+
+Render a sentiment trajectory with optional overlays.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name       | Type                      | Description                                                                                                                                                                                                              | Default                  |
+|------------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|
+| trajectory | TrajectoryComponents      | Raw and smoothed signals (as returned by :func:`prepare_trajectory`).                                                                                                                                                    | _required_               |
+| title      | str                       | Matplotlib axes title.                                                                                                                                                                                                   | `'Sentiment Trajectory'` |
+| legend_loc | str                       | Legend placement passed to :meth:`matplotlib.axes.Axes.legend`.                                                                                                                                                          | `'upper right'`          |
+| colors     | dict\[str, str\]          | Custom colors for plot components. Keys can be ``"raw"``, ``"rolling"``, and/or ``"dct"``. Defaults to grey, blue, and red respectively if not specified.                                                                | `None`                   |
+| components | set\[str\] \| list\[str\] | Which components to display. Can include ``"raw"``, ``"rolling"``, and/or ``"dct"``. If ``None`` (default), all available components are shown. Use this to reduce visual clutter by showing only specific trajectories. | `None`                   |
+| ax         | matplotlib.axes.Axes      | Axes to draw on. Defaults to ``plt.gca()``.                                                                                                                                                                              | `None`                   |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                 | Description                             |
+|--------|----------------------|-----------------------------------------|
+|        | matplotlib.axes.Axes | Axes containing the plotted trajectory. |
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> # Use custom colors
+>>> plot_trajectory(
+...     trajectory,
+...     colors={"raw": "lightgray", "rolling": "green", "dct": "purple"}
+... )
+>>>
+>>> # Show only the DCT smoothed line
+>>> plot_trajectory(trajectory, components=["dct"])
+>>>
+>>> # Custom figure size with specific components
+>>> fig, ax = plt.subplots(figsize=(10, 5), dpi=150)
+>>> plot_trajectory(trajectory, components=["rolling", "dct"], ax=ax)
+```

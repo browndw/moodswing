@@ -1,0 +1,48 @@
+# DCTTransform { #moodswing.transforms.DCTTransform }
+
+```python
+transforms.DCTTransform(
+    low_pass_size=5,
+    output_length=100,
+    scale_range=False,
+    scale_values=False,
+)
+```
+
+Compute a low-pass discrete cosine transform.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name          | Type   | Description                                                                                                                                                                                                                                                                                                   | Default   |
+|---------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| low_pass_size | int    | Number of DCT frequency components to retain. Lower values produce smoother curves. Defaults to 5.  - 2-5: Very smooth, broad narrative patterns only - 5-10: Balanced smoothing (recommended for most uses) - 10-20: Preserves more detail, shows secondary peaks - >20: Minimal smoothing, may retain noise | `5`       |
+| output_length | int    | Number of points in the interpolated output. Defaults to 100. Common values: 100-200 for visualization, 1000+ for analysis.                                                                                                                                                                                   | `100`     |
+| scale_range   | bool   | When ``True``, rescale output to [-1, 1]. Mutually exclusive with ``scale_values``. Use for comparing texts on a common scale.                                                                                                                                                                                | `False`   |
+| scale_values  | bool   | When ``True``, standardize output (mean=0, std=1). Mutually exclusive with ``scale_range``. Use for statistical analysis.                                                                                                                                                                                     | `False`   |
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> # Smooth smoothing for broad patterns
+>>> dct_smooth = DCTTransform(low_pass_size=5, output_length=100)
+>>> smoothed = dct_smooth.transform(raw_scores)
+>>>
+>>> # More detail, normalized range
+>>> dct_detailed = DCTTransform(
+...     low_pass_size=15,
+...     output_length=200,
+...     scale_range=True
+... )
+>>>
+>>> # For statistical comparison across texts
+>>> dct_stats = DCTTransform(scale_values=True)
+```
+
+## Notes {.doc-section .doc-section-notes}
+
+You cannot set both ``scale_range`` and ``scale_values`` to ``True``.
+Choose one based on your use case:
+
+- Use ``scale_range=True`` for visualization and direct comparison
+- Use ``scale_values=True`` for statistical analysis
+- Use neither for preserving original scale

@@ -1,0 +1,53 @@
+# trajectory_to_dataframe { #moodswing.viz.trajectory_to_dataframe }
+
+```python
+viz.trajectory_to_dataframe(trajectory, normalize_position=True)
+```
+
+Convert trajectory components to a tidy pandas DataFrame.
+
+This helper creates a long-format DataFrame suitable for plotting with
+seaborn, plotly, or custom matplotlib code. Each row represents one
+position along one trajectory component.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name               | Type                 | Description                                                                                                                                             | Default    |
+|--------------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| trajectory         | TrajectoryComponents | The trajectory data to convert.                                                                                                                         | _required_ |
+| normalize_position | bool                 | If ``True`` (default), position values are normalized to [0, 1] representing relative narrative time. If ``False``, use integer indices (0, 1, 2, ...). | `True`     |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type             | Description                                                                                                                                                                                          |
+|--------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|        | pandas.DataFrame | Tidy DataFrame with columns:  - ``position`` : float or int, location along narrative - ``component`` : str, one of "raw", "rolling", or "dct" - ``value`` : float, sentiment score at this position |
+
+## Examples {.doc-section .doc-section-examples}
+
+```python
+>>> from moodswing import prepare_trajectory, trajectory_to_dataframe
+>>> import matplotlib.pyplot as plt
+>>> import seaborn as sns
+>>>
+>>> # Create trajectory
+>>> trajectory = prepare_trajectory(
+...     scores,
+...     rolling_window=50,
+...     dct_transform=DCTTransform(low_pass_size=10)
+... )
+>>>
+>>> # Convert to DataFrame
+>>> df = trajectory_to_dataframe(trajectory)
+>>>
+>>> # Plot with seaborn
+>>> sns.lineplot(data=df, x='position', y='value', hue='component')
+>>> plt.show()
+>>>
+>>> # Filter to specific components
+>>> df_smooth = df[df['component'].isin(['rolling', 'dct'])]
+>>> df_smooth.pivot(index='position', columns='component', values='value').plot()  #
+>>>
+>>> # Export for further analysis
+>>> df.to_csv('sentiment_trajectory.csv', index=False)
+```

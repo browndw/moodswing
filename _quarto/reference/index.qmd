@@ -1,0 +1,50 @@
+# Reference {.doc .doc-index}
+
+## Loading Text
+
+Utilities for getting raw text into the workflow.
+
+| | |
+| --- | --- |
+| [load_sample_text](load_sample_text.qmd#moodswing.data.load_sample_text) | Return a single ``(doc_id, text)`` pair from the bundled sample corpus. |
+| [list_sample_texts](list_sample_texts.qmd#moodswing.data.list_sample_texts) | Return a list of available document IDs from the bundled sample corpus. |
+| [load_text_file](load_text_file.qmd#moodswing.data.load_text_file) | Read a single ``.txt`` file and return a cleaned ``{doc_id, text}`` record. |
+
+## Sentiment Analyzers
+
+Dictionary and spaCy-based sentiment scoring interfaces.
+
+| | |
+| --- | --- |
+| [DictionarySentimentAnalyzer](DictionarySentimentAnalyzer.qmd#moodswing.sentiment.DictionarySentimentAnalyzer) | Sentence-level sentiment scoring built on dictionary lookups. |
+| [SpaCySentimentAnalyzer](SpaCySentimentAnalyzer.qmd#moodswing.sentiment.SpaCySentimentAnalyzer) | Derive per-sentence sentiment values from a spaCy pipeline. |
+| [DictionarySentimentAnalyzer.sentence_scores](DictionarySentimentAnalyzer.sentence_scores.qmd#moodswing.sentiment.DictionarySentimentAnalyzer.sentence_scores) | Return one sentiment score per sentence. |
+| [SpaCySentimentAnalyzer.text_scores](SpaCySentimentAnalyzer.text_scores.qmd#moodswing.sentiment.SpaCySentimentAnalyzer.text_scores) | Split raw text into sentences and score each one. |
+
+## Data Types
+
+Result containers and data structures.
+
+| | |
+| --- | --- |
+| [MixedMessageResult](MixedMessageResult.qmd#moodswing.MixedMessageResult) | Result from analyzing mixed sentiment signals. |
+| [TrajectoryComponents](TrajectoryComponents.qmd#moodswing.TrajectoryComponents) | Container holding raw and smoothed signals. |
+
+## Trajectory Tools
+
+Transform helpers for plotting narrative sentiment curves.
+
+| | |
+| --- | --- |
+| [DCTTransform](DCTTransform.qmd#moodswing.transforms.DCTTransform) | Compute a low-pass discrete cosine transform. |
+| [rolling_mean](rolling_mean.qmd#moodswing.transforms.rolling_mean) | Compute a rolling (moving) average over a sequence of values. |
+
+## Visualization
+
+High-level helpers for preparing and plotting trajectories.
+
+| | |
+| --- | --- |
+| [prepare_trajectory](prepare_trajectory.qmd#moodswing.viz.prepare_trajectory) | Compute optional smoothing passes for a sentiment signal. |
+| [plot_trajectory](plot_trajectory.qmd#moodswing.viz.plot_trajectory) | Render a sentiment trajectory with optional overlays. |
+| [trajectory_to_dataframe](trajectory_to_dataframe.qmd#moodswing.viz.trajectory_to_dataframe) | Convert trajectory components to a tidy pandas DataFrame. |
