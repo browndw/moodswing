@@ -8,6 +8,10 @@ from moodswing.viz.trajectory import prepare_trajectory
 
 
 class _DummyTransform:
+    def __init__(self):
+        self.scale_range = False
+        self.scale_values = False
+    
     def transform(self, values):
         data = np.asarray(values, dtype=float)
         return np.array([data[0], data[-1]], dtype=float)
