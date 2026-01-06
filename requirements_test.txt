@@ -1,0 +1,13 @@
+# Runtime dependencies (mirrors pyproject with versions loose but bounded if needed)
+numpy>=1.22
+matplotlib>=3.5
+spacy>=3.7
+spacytextblob>=5.0
+nltk>=3.9
+
+# Test-only dependencies
+pytest>=7.0
+pytest-cov>=4.0
+
+# (Optional) for any future doc build tests; harmless if unused
+quartodoc>=0.7
